@@ -6,9 +6,9 @@ import NavBar from "@/components/ui/NavBar"
 import type { LobbyPlayer } from "@/types/game"
 
 const PREVIEW_PLAYERS: LobbyPlayer[] = [
-  { id: "p-1", name: "Alex", isReady: true, isHost: true },
-  { id: "p-2", name: "Sam", isReady: true, isHost: false },
-  { id: "p-3", name: "Mina", isReady: false, isHost: false },
+  { id: "p-1", name: "sai", isReady: true, isHost: true },
+  { id: "p-2", name: "prem", isReady: true, isHost: false },
+  { id: "p-3", name: "saiprem", isReady: false, isHost: false },
 ]
 const PREVIEW_SELF_ID = "p-1"
 const PREVIEW_CODE = "AB12CD"
