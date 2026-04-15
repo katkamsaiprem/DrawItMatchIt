@@ -1,0 +1,1 @@
+connect Landing buttons to routing in homePage
