@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
+import { Link } from "react-router-dom"
 
 type LobbyHeaderProps = {
   lobbyCode: string
@@ -20,7 +21,8 @@ function LobbyHeader({ lobbyCode, isHost }: LobbyHeaderProps) {
           Copy code
         </Button>
         <Button variant="outline" type="button">
-          Leave lobby
+          <Link to="/">Leave Lobby</Link>
+
         </Button>
         {isHost ? <p className="text-sm text-muted-foreground sm:ml-auto">You are the host.</p> : null}
       </CardContent>

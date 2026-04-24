@@ -11,6 +11,6 @@ const NameInputPage = () => {
             </main>
         </div>
     )
-}
+}   
 
 export default NameInputPage

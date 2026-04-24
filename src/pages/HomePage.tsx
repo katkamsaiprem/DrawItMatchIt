@@ -9,7 +9,6 @@ const HomePage = () => {
     return (
         <div className="min-h-screen bg-linear-to-b from-background to-muted/60">
             <NavBar subtitle="." />
-
             <main className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-12">
                 <Card>
                     <CardHeader>
