@@ -36,8 +36,8 @@ const useCanvas = () => {
 
         ctxRef.current = context;
 
-       
-    }, []); 
+
+    }, []);
 
     return { canvasRef, isDrawing, ctxRef, getPosition };
 
@@ -65,4 +65,15 @@ export const useMouseMoveHandler = (
     ctx.lineTo(x, y);
     ctx.stroke();
 }
-export default useCanvas;
+export const useMouseUpHandler = (
+    isDrawing: RefObject<boolean>,
+    ctx: CanvasRenderingContext2D | null
+) => {
+    if (!ctx) return;
+    isDrawing.current = false;
+    
+
+
+
+}
+// export default useCanvas;

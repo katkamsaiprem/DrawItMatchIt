@@ -24,7 +24,15 @@ INFO
 Random room code generator 
 implement time selector
 
-
+implement drawing canvas
+--ToolBox
+ -brush size
+ -color palette
+ -Eraser
+ -Undo/Redo
 
 implement countdown
 
+
+
+ 

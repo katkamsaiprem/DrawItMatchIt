@@ -1,10 +1,24 @@
-import CanvasComponent from "@/components/canvas/DrawingCanvas"
+// import CanvasComponent from "@/components/canvas/DrawingCanvas"
+import PlayerList from "@/components/lobby/PlayerList";
+import NavBar from "@/components/ui/NavBar";
+import { PREVIEW_PLAYERS, PREVIEW_SELF_ID } from "./LobbyPage";
+import CanvasComponent from "@/components/canvas/DrawingCanvas";
 
 const GamePage = () => {
+    const currentPlayer = PREVIEW_PLAYERS.find((player) => player.id === PREVIEW_SELF_ID)
 
-    //Canvas, navbar ,players in room, tools components
-    <CanvasComponent />
-    return <>
-    </>
+    return (
+        <div>
+            <NavBar subtitle="Invite players, get ready, then start." />
+            <main className="flex gap-4">
+                <div className="flex-1">
+                    <CanvasComponent />
+                </div>
+                <div className="m-3">
+                    <PlayerList players={PREVIEW_PLAYERS} selfPlayerId={PREVIEW_SELF_ID} />
+                </div>
+            </main>
+        </div>
+    )
 }
 export default GamePage;

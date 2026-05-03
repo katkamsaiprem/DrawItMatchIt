@@ -1,1 +1,0 @@
-//color picker , brush size, eraser, undo
