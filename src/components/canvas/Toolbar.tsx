@@ -1,16 +1,4 @@
-type ToolbarProps = {
-  lineSize: number;
-  lineColor: string;
-  mode: "draw" | "erase";
-  onLineSizeChange: (value: number) => void;
-  onLineColorChange: (value: string) => void;
-  onToggleMode: () => void;
-  onUndo: () => void;
-
-  onClear: () => void;
-  onDownload: () => void;
-
-};
+import type {ToolbarProps} from "@/types/toolBar.ts"
 
 //color picker , brush size, eraser, undo
 const Toolbar = ({
@@ -21,7 +9,6 @@ const Toolbar = ({
   onLineColorChange,
   onToggleMode,
   onUndo,
-
   onClear,
   onDownload,
 
@@ -37,7 +24,7 @@ const Toolbar = ({
           min="1"
           max="40"
           value={lineSize}
-          onChange={(e) => onLineSizeChange(Number(e.target.value))}
+          onChange={(e) => onLineSizeChange(Number(e.target.value))}//Number converts num to string
         />
       </label>
 

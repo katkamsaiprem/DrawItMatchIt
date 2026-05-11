@@ -24,14 +24,16 @@ INFO
 Random room code generator 
 implement time selector
 
-implement drawing canvas
---ToolBox
- -brush size
- -color palette
- -Eraser
- -Undo/Redo
+implement drawing canvas✅
+--ToolBox✅
+ -brush size✅
+ -color palette✅
+ -Eraser✅
+ -Undo/Redo✅
 
-implement countdown
+implement countdown using shadcn 
+ --when players enters gameplay ,countdown should start ,
+ --if countdown reaches completes then navigate to ResultsPage
 
 
 
