@@ -31,9 +31,9 @@ implement drawing canvas✅
  -Eraser✅
  -Undo/Redo✅
 
-implement countdown using shadcn 
- --when players enters gameplay ,countdown should start ,
- --if countdown reaches completes then navigate to ResultsPage
+implement countdown using shadcn ✅
+ --when players enters gameplay ,countdown should start ,✅
+ --if countdown reaches completes then navigate to ResultsPage✅
 
 
 

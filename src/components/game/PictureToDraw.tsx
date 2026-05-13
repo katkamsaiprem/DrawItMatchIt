@@ -1,1 +1,0 @@
-//shows Picture from db to draw 
