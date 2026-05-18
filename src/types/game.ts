@@ -5,6 +5,9 @@ export type LobbyPlayer = {
   name: string
   isReady: boolean
   isHost: boolean
+  avatarURL?: string
+  status?: "drawing" | "finished" | "thinking"
+  statusText?: string
 }
 
 export type LobbySession = {
