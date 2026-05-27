@@ -6,12 +6,9 @@ type RoomSidebarProps = {
     selfPlayerId: string
 }
 
-const statusMeta: Record<
-    NonNullable<LobbyPlayer["status"]>,
-    { label: string; tone: string; icon: string }
-> = {
+const statusMeta: Record<NonNullable<LobbyPlayer["status"]>, { label: string; tone: string; icon: string }> = {
     drawing: { label: "Drawing...", tone: "text-primary", icon: "edit" },
-    finished: { label: "Finished!", tone: "text-emerald-600", icon: "check" },
+    finished: { label: "Finished", tone: "text-emerald-600", icon: "check" },
     thinking: { label: "Thinking...", tone: "text-muted-foreground", icon: "psychology" },
 }
 
@@ -26,7 +23,7 @@ const RoomSidebar = ({ players, selfPlayerId }: RoomSidebarProps) => {
                 <CardContent className="space-y-3">
                     {players.map((player) => {
                         const isSelf = player.id === selfPlayerId
-                        const status = player.status ? statusMeta[player.status] : undefined
+                        const status = player.status && statusMeta[player.status]  // statusMeta[player.status] returns key which matchs with player.status value(looks up the config for that players status)
                         const statusText = player.statusText ?? status?.label ?? "Waiting..."
 
                         return (

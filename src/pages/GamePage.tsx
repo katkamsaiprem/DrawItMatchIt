@@ -15,7 +15,7 @@ const GamePage = () => {
             <NavBar
                 subtitle="Invite players, get ready, then start."
 
-                rightSlot={<Countdown minutes={2} />}
+                rightSlot={<Countdown minutes={25} />}
             />
             <main className="flex gap-4">
                 <div className="flex-1">

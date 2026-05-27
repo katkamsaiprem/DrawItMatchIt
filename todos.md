@@ -4,7 +4,7 @@ connect Landing buttons to routing in homePage✅
 leave room✅
 
 
-TODOS
+TODO
 implement Drawing canvas
 INFO
   -ctx holds state(how pen look right now ) and methods (actions that pen can do)
@@ -38,3 +38,22 @@ implement countdown using shadcn ✅
 
 
  
+Backend services and Db using Appwrite TODOS
+TODO
+
+ Create Appwrite Cloud project + Web platform note endpoint and project ID.  ✅
+ Add Vite env vars for Appwrite ✅
+ Install Appwrite SDK and initialize client module.  ✅
+ Create database + collections ✅
+ Create storage bucket✅
+ Define attributes + indexes  ✅
+ Decide auth: start with anonymous session create session on app load.  
+ Implement lobby create/join and player upsert.  
+ Replace preview data in Lobby UI with real reads/writes.  
+ Add realtime subscriptions for lobby + players.  
+ Implement game start + player status updates.  
+ Upload drawing PNG to storage + save drawings document.  
+ Add Appwrite Function for AI analysis
+ Store AI results in results and render Results page from DB.  
+ Add loading/error states and cleanup for realtime subscriptions.
+
