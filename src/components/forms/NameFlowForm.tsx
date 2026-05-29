@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Input } from "@/components/ui/Input"
 import type { LobbyMode } from "@/types/game"
+import { appwriteDb } from "@/appwrite-services/AppwriteTablesDB"
 
 const getMode = (params: URLSearchParams): LobbyMode => (params.get("mode") === "join" ? "join" : "create")
 
@@ -13,6 +14,13 @@ function NameFlowForm() {
   const mode = getMode(params)
   const isJoinMode = mode === "join"
 
+  const handleCreate = async () => {
+    const { lobby, player } = await appwriteDb.createLobby(userId, playerName)
+  }
+
+  const handlejoin = async () => {
+    const { lobby, player } = await appwriteDb.joinLobby(lobbyCode, useRevalidator, playerName)
+  }
   return (
     <Card>
       <CardHeader>
@@ -21,7 +29,7 @@ function NameFlowForm() {
       </CardHeader>
       <CardContent>
         <div className="mb-4 grid grid-cols-2 gap-2 rounded-lg border p-1">
-          <Button asChild variant={mode === "create" ? "default" : "ghost"} type="button">
+          <Button onClick={handleCreate} asChild variant={mode === "create" ? "default" : "ghost"} type="button">
             <Link to="/name?mode=create">Create</Link>
           </Button>
           <Button asChild variant={mode === "join" ? "default" : "ghost"} type="button">

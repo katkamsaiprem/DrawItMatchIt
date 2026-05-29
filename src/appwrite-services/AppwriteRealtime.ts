@@ -3,7 +3,7 @@ import appwriteClient from ".";
 
 
 class AppwriteRealtime {
-    protected appwriteRealtime: Realtime;
+    private appwriteRealtime: Realtime;
     constructor() {
         this.appwriteRealtime = new Realtime(appwriteClient)
     }

@@ -5,8 +5,34 @@ import LobbyPage from "@/pages/LobbyPage"
 import NameInputPage from "@/pages/NameInputPage"
 import GamePage from "@/pages/GamePage"//@ it maps to src folder
 import ResultsPage from "@/pages/ResultsPage"
+import { appwriteAccount } from "./appwrite-services/AppwriteAccount"
+import { useEffect, useState } from "react"
 
 function App() {
+  const [userId, setUserId] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    let isMounted = true;//this flag is used to know that when component is not mounted ,then not call 
+
+    const initSession = async () => {
+      try {
+        const id = await appwriteAccount.ensureSession()
+        if (isMounted) setUserId(id ?? null);//?? returns  right side if left side is null or undefined else left side
+      }
+      catch (err) {
+        console.error("Failed to create session", err)
+      }
+
+    };
+    void initSession();
+
+    return () => {//cleanup function , runs when comp unmounts
+      isMounted = false;
+    };
+  }, []);
+
+
   return (
     <BrowserRouter>
       <Routes>

@@ -4,7 +4,7 @@ import appwriteClient from ".";
 
 class AppwriteStorage {
 
-    protected appwriteStorage: Storage;
+    private appwriteStorage: Storage;
     constructor() {
         this.appwriteStorage = new Storage(appwriteClient)
     }
