@@ -6,10 +6,17 @@ import NameInputPage from "@/pages/NameInputPage"
 import GamePage from "@/pages/GamePage"//@ it maps to src folder
 import ResultsPage from "@/pages/ResultsPage"
 import { appwriteAccount } from "./appwrite-services/AppwriteAccount"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
+import { useAppStore } from "./store/useAppStore"
 
 function App() {
-  const [userId, setUserId] = useState<string | null>(null);
+  const { setUserId, setLobbyId, setPlayerId, setLobbyCode } = useAppStore()
+  useEffect(() => {
+    setUserId(localStorage.getItem("userId"));
+    setLobbyId(localStorage.getItem("lobbyId"));
+    setPlayerId(localStorage.getItem("playerId"));
+    setLobbyId(localStorage.getItem("lobbyCode"));
+  }, [setLobbyCode, setPlayerId, setLobbyId, setUserId])
 
 
   useEffect(() => {
@@ -19,6 +26,7 @@ function App() {
       try {
         const id = await appwriteAccount.ensureSession()
         if (isMounted) setUserId(id ?? null);//?? returns  right side if left side is null or undefined else left side
+        if (id) localStorage.setItem("userId", id);
       }
       catch (err) {
         console.error("Failed to create session", err)

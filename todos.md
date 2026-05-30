@@ -47,11 +47,15 @@ TODO
  Create database + collections ✅
  Create storage bucket✅
  Define attributes + indexes  ✅
- Decide auth: start with anonymous session create session on app load.  
- Implement lobby create/join and player upsert.  
- Replace preview data in Lobby UI with real reads/writes.  
+ Decide auth: start with anonymous session create session on app load. ✅ 
+ Implement lobby create/join and player upsert.  ✅
+ Replace preview data in Lobby UI with real reads/writes.  ✅
+
+ lets use Zustand global store common data + session context ✅ 
+ tanstack query to sync with db 
  Add realtime subscriptions for lobby + players.  
  Implement game start + player status updates.  
+
  Upload drawing PNG to storage + save drawings document.  
  Add Appwrite Function for AI analysis
  Store AI results in results and render Results page from DB.  
