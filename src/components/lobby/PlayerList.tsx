@@ -7,7 +7,7 @@ type PlayerListProps = {
   selfPlayerId: string
 }
 
-function PlayerList({ players, selfPlayerId }: PlayerListProps) {
+const PlayerList = ({ players, selfPlayerId }: PlayerListProps) => {
   return (
     <Card>
       <CardHeader>

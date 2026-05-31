@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
+import { useState } from "react"
 import { Link } from "react-router-dom"
 
 type LobbyHeaderProps = {
@@ -7,7 +8,15 @@ type LobbyHeaderProps = {
   isHost: boolean
 }
 
-function LobbyHeader({ lobbyCode, isHost }: LobbyHeaderProps) {
+
+const LobbyHeader = ({ lobbyCode, isHost }: LobbyHeaderProps) => {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(lobbyCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000)//reset copied state after 2 seconds
+  }
   return (
     <Card>
       <CardHeader>
@@ -17,8 +26,8 @@ function LobbyHeader({ lobbyCode, isHost }: LobbyHeaderProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 sm:flex-row">
-        <Button variant="secondary" type="button">
-          Copy code
+        <Button variant="secondary" type="button" onClick={handleCopy}>
+          {copied ? 'Copied!' : 'Copy code'}
         </Button>
         <Button variant="outline" type="button">
           <Link to="/">Leave Lobby</Link>

@@ -36,8 +36,9 @@ class AppwriteAccount {
             return user.$id;
         }
         catch {
-            const session = await this.appwriteAccount.createAnonymousSession();
-            return session.$id;
+            await this.appwriteAccount.createAnonymousSession();
+            const user = await this.appwriteAccount.get();
+            return user.$id;
         }
     }
 

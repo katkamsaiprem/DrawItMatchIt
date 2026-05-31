@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Input } from "@/components/ui/Input"
 import type { LobbyMode } from "@/types/game"
-import { appwriteDb } from "@/appwrite-services/AppwriteTablesDB"
+
 import { useState } from "react"
+import { useCreateLobby, useJoinLobby } from "@/hooks/TanstackQuery/useGameQueries"
 
 const getMode = (params: URLSearchParams): LobbyMode => (params.get("mode") === "join" ? "join" : "create")
 
@@ -22,28 +23,27 @@ function NameFlowForm() {
 
   const userId = localStorage.getItem('userId')
 
-  const handleCreate = async () => {
-    if (!playerName.trim() || !userId) return
+  //tanstack createLobby Mutation
+  const createLobby = useCreateLobby();
+  const joinLobby = useJoinLobby();
 
-    const { lobby, player } = await appwriteDb.createLobby(userId, playerName)
-    localStorage.setItem("lobbyId", lobby.$id);
-    localStorage.setItem("playerId", player.$id);
-    localStorage.setItem("lobbyCode", lobby.roomId ?? "");
+  const handleCreate = async () => {
+    if (createLobby.isPending) return;  // prevent double req
+    if (!playerName.trim() || !userId) return;
+    await createLobby.mutateAsync({ userId, playerName })
     navigate("/lobby")
 
   }
 
 
   const handlejoin = async () => {
+    if (joinLobby.isPending) return;  //  prevent double req
     if (!userId || !playerName.trim() || !lobbyCode.trim()) return;
-    const { lobby, player } = await appwriteDb.joinLobby(
-      lobbyCode.trim().toUpperCase(),
+    await joinLobby.mutateAsync({
+      lobbyCode: lobbyCode.trim().toUpperCase(),
       userId,
-      playerName.trim()
-    )
-    localStorage.setItem("lobbyId", lobby.$id)
-    localStorage.setItem('playerId', player.$id)
-    localStorage.setItem("lobbyCode", lobby.roomId ?? "");
+      playerName: playerName.trim(),
+    })
     navigate("/lobby")
 
 
@@ -56,7 +56,7 @@ function NameFlowForm() {
       </CardHeader>
       <CardContent>
         <div className="mb-4 grid grid-cols-2 gap-2 rounded-lg border p-1">
-          <Button onClick={handleCreate} asChild variant={mode === "create" ? "default" : "ghost"} type="button">
+          <Button asChild variant={mode === "create" ? "default" : "ghost"} type="button">
             <Link to="/name?mode=create">Create</Link>
           </Button>
           <Button asChild variant={mode === "join" ? "default" : "ghost"} type="button">
@@ -101,7 +101,8 @@ function NameFlowForm() {
           ) : null}
 
           <CardFooter className="px-0 pb-0">
-            <Button className="w-full" size="lg" type="submit">
+            <Button className="w-full" size="lg" type="submit"
+              disabled={createLobby.isPending || joinLobby.isPending}>
               {isJoinMode ? "Join lobby" : "Create lobby"}
             </Button>
           </CardFooter>

@@ -1,10 +1,11 @@
-import { appwriteDb } from "@/appwrite-services/AppwriteTablesDB"
+
 import LobbyHeader from "@/components/lobby/LobbyHeader"
 import PlayerList from "@/components/lobby/PlayerList"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card"
 import NavBar from "@/components/ui/NavBar"
-import type { LobbyPlayer } from "@/types/game"
+import { useLobbyPlayers, useLobbyStatus, useStartGame, useToggleReady } from "@/hooks/TanstackQuery/useGameQueries"
+
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -24,7 +25,7 @@ const LobbyPage = () => {
 
     const [selfId, setSelfId] = useState<string | null>(null);
     const [lobbyCode, setLobbyCode] = useState<string>("");
-    const [players, setPlayers] = useState<LobbyPlayer[]>([]);
+
 
     const lobbyId = localStorage.getItem("lobbyId");
     const playerId = localStorage.getItem("playerId");
@@ -34,57 +35,43 @@ const LobbyPage = () => {
         const storedCode = localStorage.getItem("lobbyCode");
         if (storedCode) setLobbyCode(storedCode);
 
+    }, [playerId]) // loaded LobbyPlayers data
 
-        const loadPlayers = async () => {
-            if (!lobbyId) return;
-            const result = await appwriteDb.getLobbyPlayers(lobbyId);
-            const mapped = result.rows.map((row: any) => ({
-                id: row.$id,
-                name: row.name,
-                isHost: row.isHost,
-                isReady: row.isReady,
-                avatarURL: row.avatarURL,
-                status: row.status,
-                statusText: row.statusText,
-            }));
-            setPlayers(mapped)
+    //TanstackQuery hooks
+    const { data: players = [], isLoading } = useLobbyPlayers(lobbyId);
+    const toggleReady = useToggleReady(lobbyId)
+    const startGame = useStartGame()
+    //---------------
 
+    useLobbyPlayers(lobbyId);
+
+    //host clicks "start game "all players should navigate to /gameplay
+    const { data: lobbyStatus } = useLobbyStatus(lobbyId);
+
+    useEffect(() => {
+        if (lobbyStatus?.status === "in_progress" && lobbyId) {
+            navigate("/gamePlay");
         }
-        void loadPlayers();
+    }, [lobbyStatus?.status, navigate])
 
-
-    }, [lobbyId, playerId]) // loaded LobbyPlayers data
+    //------------
 
     const handleStartGame = async () => {
         if (!lobbyId) return;
-        await appwriteDb.startGame(lobbyId);
+        await startGame.mutateAsync(lobbyId);
         navigate("/gamePlay");
     }
 
 
     const currentPlayer = players.find((player) => player.id === selfId)
     const readyCount = players.filter((player) => player.isReady).length
-    const canStart = Boolean(currentPlayer?.isHost && readyCount >= 2)
+    const canStart = Boolean(currentPlayer?.isHost && readyCount >= 1)
 
     const handleToggleReady = async () => {
         if (!selfId || !currentPlayer) return;
-        await appwriteDb.toggleReady(selfId, !currentPlayer.isReady)//updates db
-
-        //update client
-        if (lobbyId) {
-            const result = await appwriteDb.getLobbyPlayers(lobbyId);
-            const mapped = result.rows.map((row: any) => ({
-                id: row.$id,
-                name: row.name,
-                isReady: row.isReady,
-                isHost: row.isHost,
-                avatarURL: row.avatarURL,
-                status: row.status,
-                statusText: row.statusText,
-            }));
-            setPlayers(mapped);
-        }
+        toggleReady.mutate({ playerId: selfId, isReady: !currentPlayer.isReady });
     };
+
 
     return (
         <div className="min-h-screen bg-linear-to-b from-background to-muted/50">
@@ -95,7 +82,11 @@ const LobbyPage = () => {
 
                 <div className="grid gap-4 md:grid-cols-5">
                     <div className="md:col-span-3">
-                        <PlayerList players={players} selfPlayerId={selfId ?? ""} />
+                        {isLoading
+                            ? <p className="text - muted - foreground">Loading players</p>
+
+                            : <PlayerList players={players} selfPlayerId={selfId ?? ""} />
+                        }
                     </div>
 
                     <Card className="md:col-span-2">

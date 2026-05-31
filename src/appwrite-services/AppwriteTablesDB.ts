@@ -3,8 +3,8 @@ import appwriteClient from ".";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DB_ID;
 
-const LOBBIES_TABLE_ID = import.meta.env.LOBBIES_TABLE_ID;
-const PLAYERS_TABLE_ID = import.meta.env.PLAYERS_TABLE_ID;
+const LOBBIES_TABLE_ID = import.meta.env.VITE_LOBBIES_TABLE_ID;
+const PLAYERS_TABLE_ID = import.meta.env.VITE_PLAYERS_TABLE_ID;
 
 const generateLobbyCode = () =>
     Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -47,6 +47,13 @@ class AppwriteTableDb {
         return { lobby, player };
     };
 
+    public getLobby = async (lobbyId: string) => {
+        return this.appwriteDb.getRow({
+            databaseId: DATABASE_ID,
+            tableId: LOBBIES_TABLE_ID,
+            rowId: lobbyId
+        })
+    }
     public joinLobby = async (lobbyCode: string, userId: string, name: string) => {
         const result = await this.appwriteDb.listRows({
             databaseId: DATABASE_ID,
@@ -60,10 +67,26 @@ class AppwriteTableDb {
 
         const lobby = result.rows[0];
 
+        // Check if player is already in this lobby to prevent 409 conflict
+        const existingPlayer = await this.appwriteDb.listRows({
+            databaseId: DATABASE_ID,
+            tableId: PLAYERS_TABLE_ID,
+            queries: [
+                Query.equal("lobbyId", lobby.$id),
+                Query.equal("userId", userId)
+            ]
+        });
+
+        if (existingPlayer.total > 0) {
+            // Player already exists in the lobby, just return the existing player
+            return { lobby, player: existingPlayer.rows[0] };
+        }
+
+        const rowId = ID.unique();
         const player = await this.appwriteDb.createRow({
             databaseId: DATABASE_ID,
             tableId: PLAYERS_TABLE_ID,
-            rowId: ID.unique(),
+            rowId,
             data: {
                 lobbyId: lobby.$id,
                 userId,
