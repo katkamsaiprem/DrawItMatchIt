@@ -30,9 +30,9 @@ const urlToGenerativePart = async (url: string) => {
 
 export const scoreDrawing = async (referenceUrl: string, drawingUrl: string) => {
 
-    //I used 1.5 gemini flash model becase it is best for vision data
+    //I used gemini-2.0-flash model becase it is best for vision data
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const refPart = await urlToGenerativePart(referenceUrl);
     const drawPart = await urlToGenerativePart(drawingUrl);
