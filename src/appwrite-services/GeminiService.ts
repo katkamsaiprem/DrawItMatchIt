@@ -6,7 +6,9 @@ const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 //func that download an images from appwrite and convert into base64 for gemini
 
 const urlToGenerativePart = async (url: string) => {
-    const response = await fetch(url, {
+    // Append a unique query param to bypass cached responses that lack CORS headers
+    const bypassCacheUrl = `${url}&cachebust=${Date.now()}`;
+    const response = await fetch(bypassCacheUrl, {
         headers: {
             "X-Appwrite-Project": import.meta.env.VITE_APPWRITE_PROJECT_ID
         }
