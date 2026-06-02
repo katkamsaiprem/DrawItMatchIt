@@ -17,3 +17,4 @@ export type LobbySession = {
   players: LobbyPlayer[]
   selfPlayerId: string
 }
+

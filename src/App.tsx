@@ -15,7 +15,7 @@ function App() {
     setUserId(localStorage.getItem("userId"));
     setLobbyId(localStorage.getItem("lobbyId"));
     setPlayerId(localStorage.getItem("playerId"));
-    setLobbyId(localStorage.getItem("lobbyCode"));
+    setLobbyCode(localStorage.getItem("lobbyCode"));
   }, [setLobbyCode, setPlayerId, setLobbyId, setUserId])
 
 

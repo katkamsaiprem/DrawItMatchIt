@@ -5,16 +5,16 @@ import { useTimer } from "react-timer-hook"
 import { Progress } from "@/components/ui/progress"
 // 1. Decide the input props
 // 2. convert into seconds
-// 3. 
+
 type CountdownProps = {
     minutes: number,
-    to?: string,
+    onTimeUp?: () => void; //callback when time is up
     label?: string,
 }
 
-const Countdown = ({ minutes, to = "/results", label = "Time left" }: CountdownProps) => {
+const Countdown = ({ minutes, onTimeUp, label = "Time left" }: CountdownProps) => {
 
-    const navigate = useNavigate()
+
     //converts min to sec ,floor is to get whole number not decimal num, max is get max output 1 not 0 or negative
     const totalSeconds = Math.max(1, Math.floor(minutes * 60))
 
@@ -30,7 +30,7 @@ const Countdown = ({ minutes, to = "/results", label = "Time left" }: CountdownP
     const { minutes: mins, seconds, totalSeconds: remaining } = useTimer({//as timer decreases the total seconds decreases
         expiryTimestamp: expiry,
         onExpire() {
-            navigate(to);
+            if (onTimeUp) onTimeUp();//tell the parent that time is up
         },
 
     })

@@ -5,6 +5,8 @@ const DATABASE_ID = import.meta.env.VITE_APPWRITE_DB_ID;
 
 const LOBBIES_TABLE_ID = import.meta.env.VITE_LOBBIES_TABLE_ID;
 const PLAYERS_TABLE_ID = import.meta.env.VITE_PLAYERS_TABLE_ID;
+const DRAWINGS_TABLE_ID = import.meta.env.VITE_DRAWINGS_TABLE_ID;
+
 
 const generateLobbyCode = () =>
     Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -109,12 +111,15 @@ class AppwriteTableDb {
         });
     };
 
-    public startGame = async (lobbyId: string) => {
+    public startGame = async (lobbyId: string, referenceImageId: string) => {
         return this.appwriteDb.updateRow({
             databaseId: DATABASE_ID,
             tableId: LOBBIES_TABLE_ID,
             rowId: lobbyId,
-            data: { status: "in_progress" },
+            data: {
+                status: "in_progress",
+                referenceImageId: referenceImageId
+            },
         });
     };
 
@@ -125,6 +130,32 @@ class AppwriteTableDb {
             queries: [Query.equal("lobbyId", lobbyId)],
         });
     };
+
+    public saveDrawing = async (lobbyId: string, playerId: string, fileId: string) => {
+        const drawing = await this.appwriteDb.createRow({
+            databaseId: DATABASE_ID,
+            tableId: DRAWINGS_TABLE_ID,
+            rowId: ID.unique(),
+            data: { lobbyId, playerId, fileId },
+        });
+
+        await this.appwriteDb.updateRow({
+            databaseId: DATABASE_ID,
+            tableId: PLAYERS_TABLE_ID,
+            rowId: playerId,
+            data: { status: "finished" }
+        })
+        return drawing;
+    }
+
+
+    public getDrawing = async (lobbyId: string) => {
+        return this.appwriteDb.listRows({
+            databaseId: DATABASE_ID,
+            tableId: DRAWINGS_TABLE_ID,
+            queries: [Query.equal("lobbyId", lobbyId)]
+        })
+    }
 }
 
 export const appwriteDb = new AppwriteTableDb();

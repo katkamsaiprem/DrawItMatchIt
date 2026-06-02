@@ -1,8 +1,16 @@
 import { useEffect, useRef, useState } from "react"
 import { create } from "simple-drawing-board"
 import Toolbar from "@/components/canvas/Toolbar"
+import { useAppStore } from "@/store/useAppStore";
+import { useSubmitDrawings } from "@/hooks/TanstackQuery/useGameQueries";
 
-const CanvasComponent = () => {
+
+type CanvasProps = {
+  isTimeUp?: boolean;//this prop while tell is time is up or not 
+}
+
+const CanvasComponent = ({ isTimeUp }: CanvasProps) => {
+
   const containerRef = useRef<HTMLDivElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)//useRef is used to store values like dom elements which are no need to render , 
   const boardRef = useRef<ReturnType<typeof create> | null>(null);//stores the drawing board instance ,created by create() to get access to functions
@@ -11,12 +19,16 @@ const CanvasComponent = () => {
   const [lineColor, setLineColor] = useState("#000000")
   const [mode, setMode] = useState<"draw" | "erase">("draw")
 
+  const { lobbyId, playerId } = useAppStore();
+  const submitDrawing = useSubmitDrawings();
+
+
   const applyStrokeStyle = (canvas: HTMLCanvasElement) => {
     const ctx = canvas.getContext("2d")
     if (!ctx) return
     ctx.lineCap = "round"
     ctx.lineJoin = "round"
-    
+
   }
   useEffect(() => {
     if (!canvasRef.current) return;//if canvas is not ready then return
@@ -100,6 +112,30 @@ const CanvasComponent = () => {
     a.click();
   };
 
+  useEffect(() => {
+    if (isTimeUp) {
+      handleSubmit()
+    }
+  }, [isTimeUp])
+
+
+  const handleSubmit = async () => {
+    if (!boardRef.current || !lobbyId || !playerId) return;
+
+
+    const dataUrl = boardRef.current.toDataURL();
+
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+    const file = new File([blob], "drawing.png", { type: "image/png" });
+
+    await submitDrawing.mutateAsync({
+      lobbyId,
+      playerId,
+      file,
+    })
+
+  }
 
 
   return (

@@ -1,3 +1,4 @@
+import { appwriteStorage } from "@/appwrite-services/AppwriteStorage"
 import { appwriteDb } from "@/appwrite-services/AppwriteTablesDB"
 import type { LobbyPlayer } from "@/types/game"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -25,11 +26,14 @@ export const useLobbyPlayers = (lobbyId: string | null) => {
 
 //Query fetch lobby status
 export const useLobbyStatus = (lobbyId: string | null) => {
-    return useQuery<{ status: string }>({
+    return useQuery<{ status: string, referenceImageId?: string }>({
         queryKey: ["lobby-status", lobbyId],
         queryFn: async () => {
             const result = await appwriteDb.getLobby(lobbyId!);
-            return { status: result.status }
+            return {
+                status: result.status,
+                referenceImageId: result.referenceImageId
+            }
         },
         enabled: !!lobbyId,//only runs when lobbyid exists
     })
@@ -106,7 +110,31 @@ export const useToggleReady = (lobbyId: string | null) => {
 export const useStartGame = () => {
     return useMutation({
         mutationFn: async (lobbyId: string) => {
-            return appwriteDb.startGame(lobbyId);
+            const imageId = await appwriteStorage.getRandomReferenceImage();
+            return appwriteDb.startGame(lobbyId, imageId);
         }
+    })
+}
+
+//hook for upload drawings to storage bucket and update the player row status to finished
+
+export const useSubmitDrawings = () => {
+    return useMutation({
+        mutationFn: async ({
+            lobbyId,
+            playerId,
+            file,
+        }: {
+            lobbyId: string;
+            playerId: string;
+            file: File;
+        }) => {
+            //upload to storage bucket
+            const uploadedFile = await appwriteStorage.uploadDrawing(file);
+
+            //save row to db and update player status to finished
+            return appwriteDb.saveDrawing(lobbyId, playerId, uploadedFile.$id)
+        },
+
     })
 }
