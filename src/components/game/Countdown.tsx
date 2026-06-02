@@ -1,5 +1,4 @@
 //// navigate to gameOverPage when timer hits 0
-import { useNavigate } from "react-router-dom"
 import { useMemo } from "react"
 import { useTimer } from "react-timer-hook"
 import { Progress } from "@/components/ui/progress"

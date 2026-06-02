@@ -42,7 +42,7 @@ export const useLobbyRealtime = (lobbyId: string | null) => {
             lobbySub = await appwriteRealtime.subscribeToDocument(
                 LOBBIES_TABLE_ID,
                 lobbyId,
-                (event) => {
+                () => {
                     queryClient.invalidateQueries({
                         queryKey: ["lobby", lobbyId]
                     })
