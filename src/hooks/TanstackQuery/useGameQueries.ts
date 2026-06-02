@@ -35,7 +35,7 @@ export const useLobbyStatus = (lobbyId: string | null) => {
                 referenceImageId: result.referenceImageId
             }
         },
-        enabled: !!lobbyId,//only runs when lobbyid exists
+        enabled: !!lobbyId,
     })
 }
 
@@ -136,5 +136,27 @@ export const useSubmitDrawings = () => {
             return appwriteDb.saveDrawing(lobbyId, playerId, uploadedFile.$id)
         },
 
+    })
+}
+
+//we need to query to fetch the drawings that we saved to db
+export const useLobbyDrawings = (lobbyId: string | null) => {
+    return useQuery({
+        queryKey: ["lobby-drawings", lobbyId],
+        queryFn: async () => {
+            const result = await appwriteDb.getDrawing(lobbyId!);
+            return result.rows;
+        },
+        enabled: !!lobbyId,
+    })
+}
+
+
+
+export const usePlayAgain = () => {
+    return useMutation({
+        mutationFn: async ({ lobbyId, playerIds }: { lobbyId: string, playerIds: string[] }) => {
+            return appwriteDb.resetGame(lobbyId, playerIds)
+        }
     })
 }

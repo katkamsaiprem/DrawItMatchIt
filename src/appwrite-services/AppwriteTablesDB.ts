@@ -156,6 +156,36 @@ class AppwriteTableDb {
             queries: [Query.equal("lobbyId", lobbyId)]
         })
     }
+
+    //reset game for all players for another round
+    /**
+     * Resets the lobby for all players for another around
+     * 
+     * set lobby back to waiting
+     * set each player back to thinking and not ready
+     * @param lobbyId Lobby ID
+     * @param playerIds Array of player IDs
+     */
+    public resetGame = async (lobbyId: string, playerIds: string[]) => {
+
+        await this.appwriteDb.updateRow({
+            databaseId: DATABASE_ID,
+            tableId: LOBBIES_TABLE_ID,
+            rowId: lobbyId,
+            data: { status: "waiting" }
+        })
+
+        for (let i = 0; i < playerIds.length; i++) {
+            await this.appwriteDb.updateRow({
+                databaseId: DATABASE_ID,
+                tableId: PLAYERS_TABLE_ID,
+                rowId: playerIds[i],
+                data: { status: "thinking", isReady: false }
+            })
+
+        }
+
+    }
 }
 
 export const appwriteDb = new AppwriteTableDb();

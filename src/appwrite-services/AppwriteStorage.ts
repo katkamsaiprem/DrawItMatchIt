@@ -32,5 +32,10 @@ class AppwriteStorage {
 
         )
     }
+
+    public getDrawingPreview = (fileId: string) => {
+        return this.appwriteStorage.getFileView(DRAWINGS_BUCKET_ID, fileId);
+    }
+    
 }
 export const appwriteStorage = new AppwriteStorage();
