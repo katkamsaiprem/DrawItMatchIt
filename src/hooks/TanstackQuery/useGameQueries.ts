@@ -120,6 +120,7 @@ export const useStartGame = () => {
 //hook for upload drawings to storage bucket and update the player row status to finished
 
 export const useSubmitDrawings = () => {
+    const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({
             lobbyId,
@@ -136,7 +137,11 @@ export const useSubmitDrawings = () => {
             //save row to db and update player status to finished
             return appwriteDb.saveDrawing(lobbyId, playerId, uploadedFile.$id)
         },
-
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({
+                queryKey: ["lobby-players", variables.lobbyId]
+            });
+        }
     })
 }
 

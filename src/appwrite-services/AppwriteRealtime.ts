@@ -20,7 +20,7 @@ class AppwriteRealtime {
         tableId: string,
         callback: (event: RealtimeResponseEvent<any>) => void
     ) => {
-        const channel = `databases.${DATABASE_ID}.table.${tableId}.rows`;
+        const channel = `databases.${DATABASE_ID}.collections.${tableId}.documents`;
         return this.appwriteRealtime.subscribe(channel, callback)
     }
 
@@ -39,7 +39,7 @@ class AppwriteRealtime {
 
     ) => {
         //build a channel string for a single row
-        const channel = `databases.${DATABASE_ID}.table.${tableId}.row.${rowId}`
+        const channel = `databases.${DATABASE_ID}.collections.${tableId}.documents.${rowId}`
         return this.appwriteRealtime.subscribe(channel, callback);
     }
 }
