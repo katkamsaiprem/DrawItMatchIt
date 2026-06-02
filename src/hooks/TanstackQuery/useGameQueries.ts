@@ -1,5 +1,6 @@
 import { appwriteStorage } from "@/appwrite-services/AppwriteStorage"
 import { appwriteDb } from "@/appwrite-services/AppwriteTablesDB"
+import { scoreDrawing } from "@/appwrite-services/GeminiService"
 import type { LobbyPlayer } from "@/types/game"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
@@ -158,5 +159,18 @@ export const usePlayAgain = () => {
         mutationFn: async ({ lobbyId, playerIds }: { lobbyId: string, playerIds: string[] }) => {
             return appwriteDb.resetGame(lobbyId, playerIds)
         }
+    })
+}
+
+export const useAIcritique = (referenceUrl: string, drawingUrl: string) => {
+    return useQuery({
+
+        //we use both URLs as the query key so it uniquely caches the result
+        queryKey: ["ai-score", referenceUrl, drawingUrl],
+        queryFn: async () => {
+            return await scoreDrawing(referenceUrl, drawingUrl)
+        },
+        enabled: !!referenceUrl && !!drawingUrl && referenceUrl !== "/" && drawingUrl !== "/",//only run when we have both the URLs and is not default value
+        staleTime: Infinity,//never refetch unless the image changes
     })
 }

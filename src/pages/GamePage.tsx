@@ -39,7 +39,7 @@ const GamePage = () => {
             <NavBar
                 subtitle="Invite players, get ready, then start."
 
-                rightSlot={<Countdown minutes={2} onTimeUp={() => setTimeUp(true)} />}
+                rightSlot={<Countdown minutes={1} onTimeUp={() => setTimeUp(true)} />}
             />
             <main className="flex gap-4">
 

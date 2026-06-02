@@ -1,6 +1,6 @@
 import { appwriteStorage } from "@/appwrite-services/AppwriteStorage";
 import { PlayersResults, ResultsCritique, ResultsHeader, ResultsShowcase, ResultsStats } from "@/components/results"
-import { useLobbyDrawings, useLobbyPlayers, useLobbyStatus, usePlayAgain } from "@/hooks/TanstackQuery/useGameQueries";
+import { useAIcritique, useLobbyDrawings, useLobbyPlayers, useLobbyStatus, usePlayAgain } from "@/hooks/TanstackQuery/useGameQueries";
 import { useLobbyRealtime } from "@/hooks/TanstackQuery/useLobbyRealtime";
 import { useAppStore } from "@/store/useAppStore";
 import type { PlayersData } from "@/types/playersResultsData"
@@ -49,18 +49,24 @@ const ResultsPage = () => {
     ? appwriteStorage.getFilePreview(lobby.referenceImageId)
     : "/";
 
-  const Results: PlayersData[] = players.map(player => ({
-    name: player.name,
-    accuracy: 0,
-    points: 0
-  }))
-
   const firstDrawing = drawings.length > 0 ? drawings[0] : null;
   const firstDrawingArtist = players.find(p => p.id === firstDrawing?.playerId)?.name || "Unknown";
 
   const drawingURL = firstDrawing?.fileId
     ? appwriteStorage.getDrawingPreview(firstDrawing.fileId)
     : "/"
+
+  const { data: aiResult, isLoading: isScoring } = useAIcritique(referenceImageURL, drawingURL);
+
+  const Results: PlayersData[] = players.map(player => ({
+    name: player.name,
+    accuracy: player.id === firstDrawing?.playerId ? (aiResult?.score || 0) : 0,
+    points: 0
+  }))
+
+
+
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <ResultsHeader
@@ -76,7 +82,7 @@ const ResultsPage = () => {
             drawingURL={drawingURL}
           />
           <ResultsCritique
-            text="The winner demonstrated exceptional spatial awareness in wing structure. Minor saturation variance is within professional range. Confidence score: 99.8%."
+            text={isScoring ? "The AI judge is analyzing the brushstrokes..." : (aiResult?.critique || "waiting for critique...")}
           />
         </div>
 
