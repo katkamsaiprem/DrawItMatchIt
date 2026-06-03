@@ -69,7 +69,7 @@ class AppwriteTableDb {
 
         const lobby = result.rows[0];
 
-        // Check if player is already in this lobby to prevent 409 conflict
+        // Check if player is already in this lobby
         const existingPlayer = await this.appwriteDb.listRows({
             databaseId: DATABASE_ID,
             tableId: PLAYERS_TABLE_ID,
@@ -80,8 +80,30 @@ class AppwriteTableDb {
         });
 
         if (existingPlayer.total > 0) {
-            // Player already exists in the lobby, just return the existing player
             return { lobby, player: existingPlayer.rows[0] };
+        }
+
+        // Check if player exists anywhere else (prevents 409 on userId unique index)
+        const playerAnywhere = await this.appwriteDb.listRows({
+            databaseId: DATABASE_ID,
+            tableId: PLAYERS_TABLE_ID,
+            queries: [Query.equal("userId", userId)]
+        });
+
+        if (playerAnywhere.total > 0) {
+            const player = await this.appwriteDb.updateRow({
+                databaseId: DATABASE_ID,
+                tableId: PLAYERS_TABLE_ID,
+                rowId: playerAnywhere.rows[0].$id,
+                data: {
+                    lobbyId: lobby.$id,
+                    name,
+                    isReady: false,
+                    isHost: false,
+                    status: "thinking"
+                }
+            });
+            return { lobby, player };
         }
 
         const rowId = ID.unique();
@@ -103,7 +125,6 @@ class AppwriteTableDb {
         } catch (error: any) {
             if (error.code === 409) {
                 try {
-                  
                     const fallbackPlayer = await this.appwriteDb.getRow({
                         databaseId: DATABASE_ID,
                         tableId: PLAYERS_TABLE_ID,
@@ -111,7 +132,6 @@ class AppwriteTableDb {
                     });
                     return { lobby, player: fallbackPlayer };
                 } catch (e) {
-                   
                     await new Promise(resolve => setTimeout(resolve, 500));
                     const fallbackPlayerList = await this.appwriteDb.listRows({
                         databaseId: DATABASE_ID,
