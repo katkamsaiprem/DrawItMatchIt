@@ -91,19 +91,26 @@ class AppwriteTableDb {
         });
 
         if (playerAnywhere.total > 0) {
-            const player = await this.appwriteDb.updateRow({
-                databaseId: DATABASE_ID,
-                tableId: PLAYERS_TABLE_ID,
-                rowId: playerAnywhere.rows[0].$id,
-                data: {
-                    lobbyId: lobby.$id,
-                    name,
-                    isReady: false,
-                    isHost: false,
-                    status: "thinking"
+            try {
+                const player = await this.appwriteDb.updateRow({
+                    databaseId: DATABASE_ID,
+                    tableId: PLAYERS_TABLE_ID,
+                    rowId: playerAnywhere.rows[0].$id,
+                    data: {
+                        lobbyId: lobby.$id,
+                        name,
+                        isReady: false,
+                        isHost: false,
+                        status: "thinking"
+                    }
+                });
+                return { lobby, player };
+            } catch (error: any) {
+                if (error.code === 409) {
+                    throw new Error("This name is already taken in the lobby. Please choose a different name.");
                 }
-            });
-            return { lobby, player };
+                throw error;
+            }
         }
 
         const rowId = ID.unique();
@@ -145,6 +152,8 @@ class AppwriteTableDb {
                         return { lobby, player: fallbackPlayerList.rows[0] };
                     }
                 }
+                // If 409 but fallback didn't catch a race condition, it's a genuine unique constraint violation (like name)
+                throw new Error("This name is already taken in the lobby. Please choose a different name.");
             }
             throw error;
         }

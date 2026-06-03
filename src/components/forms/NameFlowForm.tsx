@@ -20,6 +20,7 @@ function NameFlowForm() {
 
   const [playerName, setPlayerName] = useState("");
   const [lobbyCode, setLobbyCode] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const userId = localStorage.getItem('userId')
 
@@ -28,25 +29,31 @@ function NameFlowForm() {
   const joinLobby = useJoinLobby();
 
   const handleCreate = async () => {
-    if (createLobby.isPending) return;  // prevent double req
+    if (createLobby.isPending) return;
     if (!playerName.trim() || !userId) return;
-    await createLobby.mutateAsync({ userId, playerName })
-    navigate("/lobby")
-
+    setErrorMessage("");
+    try {
+      await createLobby.mutateAsync({ userId, playerName })
+      navigate("/lobby")
+    } catch (error: any) {
+      setErrorMessage(error.message || "Failed to create lobby");
+    }
   }
 
-
   const handlejoin = async () => {
-    if (joinLobby.isPending) return;  //  prevent double req
+    if (joinLobby.isPending) return;
     if (!userId || !playerName.trim() || !lobbyCode.trim()) return;
-    await joinLobby.mutateAsync({
-      lobbyCode: lobbyCode.trim().toUpperCase(),
-      userId,
-      playerName: playerName.trim(),
-    })
-    navigate("/lobby")
-
-
+    setErrorMessage("");
+    try {
+      await joinLobby.mutateAsync({
+        lobbyCode: lobbyCode.trim().toUpperCase(),
+        userId,
+        playerName: playerName.trim(),
+      })
+      navigate("/lobby")
+    } catch (error: any) {
+      setErrorMessage(error.message || "Failed to join lobby");
+    }
   }
   return (
     <Card>
@@ -63,6 +70,12 @@ function NameFlowForm() {
             <Link to="/name?mode=join">Join</Link>
           </Button>
         </div>
+
+        {errorMessage && (
+          <div className="mb-4 p-3 rounded-md bg-destructive/15 text-destructive text-sm font-medium">
+            {errorMessage}
+          </div>
+        )}
 
         <form
           className="space-y-3"
