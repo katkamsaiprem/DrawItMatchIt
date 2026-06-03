@@ -24,7 +24,7 @@ class AppwriteTableDb {
         const lobby = await this.appwriteDb.createRow({
             databaseId: DATABASE_ID,
             tableId: LOBBIES_TABLE_ID,
-            rowId: ID.unique(),
+            rowId: "unique()",
             data: {
                 roomId,
                 hostId: hostUserId,
@@ -35,7 +35,7 @@ class AppwriteTableDb {
         const player = await this.appwriteDb.createRow({
             databaseId: DATABASE_ID,
             tableId: PLAYERS_TABLE_ID,
-            rowId: ID.unique(),
+            rowId: "unique()",
             data: {
                 lobbyId: lobby.$id,
                 userId: hostUserId,
@@ -84,7 +84,7 @@ class AppwriteTableDb {
             return { lobby, player: existingPlayer.rows[0] };
         }
 
-        const rowId = ID.unique();
+        const rowId = "unique()";
         const player = await this.appwriteDb.createRow({
             databaseId: DATABASE_ID,
             tableId: PLAYERS_TABLE_ID,
@@ -135,7 +135,7 @@ class AppwriteTableDb {
         const drawing = await this.appwriteDb.createRow({
             databaseId: DATABASE_ID,
             tableId: DRAWINGS_TABLE_ID,
-            rowId: ID.unique(),
+            rowId: "unique()",
             data: { lobbyId, playerId, fileId },
         });
 

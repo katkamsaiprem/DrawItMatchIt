@@ -27,7 +27,7 @@ class AppwriteStorage {
     public uploadDrawing = async (file: File) => {
         return await this.appwriteStorage.createFile(
             DRAWINGS_BUCKET_ID,
-            ID.unique(),
+            "unique()",
             file,
 
         )
