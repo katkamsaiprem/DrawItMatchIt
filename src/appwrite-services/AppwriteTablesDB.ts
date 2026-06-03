@@ -32,19 +32,43 @@ class AppwriteTableDb {
             },
         });
 
-        const player = await this.appwriteDb.createRow({
+        // Check if a player row already exists for this user (from a previous session)
+        const existingPlayer = await this.appwriteDb.listRows({
             databaseId: DATABASE_ID,
             tableId: PLAYERS_TABLE_ID,
-            rowId: ID.unique(),
-            data: {
-                lobbyId: lobby.$id,
-                userId: hostUserId,
-                name,
-                isReady: false,
-                isHost: true,
-                status: "thinking",
-            },
+            queries: [Query.equal("userId", hostUserId)],
         });
+
+        let player;
+        if (existingPlayer.total > 0) {
+            // Update the existing row to point to the new lobby
+            player = await this.appwriteDb.updateRow({
+                databaseId: DATABASE_ID,
+                tableId: PLAYERS_TABLE_ID,
+                rowId: existingPlayer.rows[0].$id,
+                data: {
+                    lobbyId: lobby.$id,
+                    name,
+                    isReady: false,
+                    isHost: true,
+                    status: "thinking",
+                },
+            });
+        } else {
+            player = await this.appwriteDb.createRow({
+                databaseId: DATABASE_ID,
+                tableId: PLAYERS_TABLE_ID,
+                rowId: ID.unique(),
+                data: {
+                    lobbyId: lobby.$id,
+                    userId: hostUserId,
+                    name,
+                    isReady: false,
+                    isHost: true,
+                    status: "thinking",
+                },
+            });
+        }
 
         return { lobby, player };
     };
