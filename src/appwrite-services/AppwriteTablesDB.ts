@@ -32,27 +32,13 @@ class AppwriteTableDb {
             },
         });
 
-        // Check if a player row already exists for this user (from a previous session)
-        const existingPlayer = await this.appwriteDb.listRows({
+        // Use upsertRow with userId as rowId — this creates the row if it
+        // doesn't exist, or replaces it if it does. Completely avoids 409
+        // conflicts from stale player rows or cross-session permission issues.
+        const player = await this.appwriteDb.upsertRow({
             databaseId: DATABASE_ID,
             tableId: PLAYERS_TABLE_ID,
-            queries: [Query.equal("userId", hostUserId)],
-        });
-
-        let player;
-        if (existingPlayer.total > 0) {
-            
-            await this.appwriteDb.deleteRow({
-                databaseId: DATABASE_ID,
-                tableId: PLAYERS_TABLE_ID,
-                rowId: existingPlayer.rows[0].$id,
-            });
-        }
-
-        player = await this.appwriteDb.createRow({
-            databaseId: DATABASE_ID,
-            tableId: PLAYERS_TABLE_ID,
-            rowId: ID.unique(),
+            rowId: hostUserId,
             data: {
                 lobbyId: lobby.$id,
                 userId: hostUserId,
@@ -73,6 +59,7 @@ class AppwriteTableDb {
             rowId: lobbyId
         })
     }
+
     public joinLobby = async (lobbyCode: string, userId: string, name: string) => {
         const result = await this.appwriteDb.listRows({
             databaseId: DATABASE_ID,
@@ -86,97 +73,24 @@ class AppwriteTableDb {
 
         const lobby = result.rows[0];
 
-        // Check if player is already in this lobby
-        const existingPlayer = await this.appwriteDb.listRows({
+        // Use upsertRow with userId as rowId — this creates the row if it
+        // doesn't exist, or replaces it if it does. Completely avoids 409
+        // conflicts from stale player rows or cross-session permission issues.
+        const player = await this.appwriteDb.upsertRow({
             databaseId: DATABASE_ID,
             tableId: PLAYERS_TABLE_ID,
-            queries: [
-                Query.equal("lobbyId", lobby.$id),
-                Query.equal("userId", userId)
-            ]
+            rowId: userId,
+            data: {
+                lobbyId: lobby.$id,
+                userId,
+                name,
+                isReady: false,
+                isHost: false,
+                status: "thinking",
+            },
         });
 
-        if (existingPlayer.total > 0) {
-            return { lobby, player: existingPlayer.rows[0] };
-        }
-
-        // Check if player exists anywhere else (prevents 409 on userId unique index)
-        const playerAnywhere = await this.appwriteDb.listRows({
-            databaseId: DATABASE_ID,
-            tableId: PLAYERS_TABLE_ID,
-            queries: [Query.equal("userId", userId)]
-        });
-
-        if (playerAnywhere.total > 0) {
-            // Delete the stale player row, then create a fresh one for this lobby.
-            // Using delete+create instead of updateRow because Appwrite TablesDB
-            // PATCH returns 409 "already exists" on rows with unique-indexed fields.
-            await this.appwriteDb.deleteRow({
-                databaseId: DATABASE_ID,
-                tableId: PLAYERS_TABLE_ID,
-                rowId: playerAnywhere.rows[0].$id,
-            });
-
-            const player = await this.appwriteDb.createRow({
-                databaseId: DATABASE_ID,
-                tableId: PLAYERS_TABLE_ID,
-                rowId: ID.unique(),
-                data: {
-                    lobbyId: lobby.$id,
-                    userId,
-                    name,
-                    isReady: false,
-                    isHost: false,
-                    status: "thinking",
-                },
-            });
-            return { lobby, player };
-        }
-
-        const rowId = ID.unique();
-        try {
-            const player = await this.appwriteDb.createRow({
-                databaseId: DATABASE_ID,
-                tableId: PLAYERS_TABLE_ID,
-                rowId,
-                data: {
-                    lobbyId: lobby.$id,
-                    userId,
-                    name,
-                    isReady: false,
-                    isHost: false,
-                    status: "thinking",
-                },
-            });
-            return { lobby, player };
-        } catch (error: any) {
-            if (error.code === 409) {
-                try {
-                    const fallbackPlayer = await this.appwriteDb.getRow({
-                        databaseId: DATABASE_ID,
-                        tableId: PLAYERS_TABLE_ID,
-                        rowId
-                    });
-                    return { lobby, player: fallbackPlayer };
-                } catch (e) {
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    const fallbackPlayerList = await this.appwriteDb.listRows({
-                        databaseId: DATABASE_ID,
-                        tableId: PLAYERS_TABLE_ID,
-                        queries: [
-                            Query.equal("lobbyId", lobby.$id),
-                            Query.equal("userId", userId)
-                        ]
-                    });
-                    if (fallbackPlayerList.total > 0) {
-                        return { lobby, player: fallbackPlayerList.rows[0] };
-                    }
-                }
-                // If 409 but fallback didn't catch a race condition, it's a genuine unique constraint violation (like name)
-                throw new Error("This name is already taken in the lobby. Please choose a different name.");
-            }
-            throw error;
-        }
+        return { lobby, player };
     };
 
     public toggleReady = async (playerId: string, isReady: boolean) => {
