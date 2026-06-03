@@ -41,34 +41,27 @@ class AppwriteTableDb {
 
         let player;
         if (existingPlayer.total > 0) {
-            // Update the existing row to point to the new lobby
-            player = await this.appwriteDb.updateRow({
+            
+            await this.appwriteDb.deleteRow({
                 databaseId: DATABASE_ID,
                 tableId: PLAYERS_TABLE_ID,
                 rowId: existingPlayer.rows[0].$id,
-                data: {
-                    lobbyId: lobby.$id,
-                    name,
-                    isReady: false,
-                    isHost: true,
-                    status: "thinking",
-                },
-            });
-        } else {
-            player = await this.appwriteDb.createRow({
-                databaseId: DATABASE_ID,
-                tableId: PLAYERS_TABLE_ID,
-                rowId: ID.unique(),
-                data: {
-                    lobbyId: lobby.$id,
-                    userId: hostUserId,
-                    name,
-                    isReady: false,
-                    isHost: true,
-                    status: "thinking",
-                },
             });
         }
+
+        player = await this.appwriteDb.createRow({
+            databaseId: DATABASE_ID,
+            tableId: PLAYERS_TABLE_ID,
+            rowId: ID.unique(),
+            data: {
+                lobbyId: lobby.$id,
+                userId: hostUserId,
+                name,
+                isReady: false,
+                isHost: true,
+                status: "thinking",
+            },
+        });
 
         return { lobby, player };
     };
@@ -115,26 +108,29 @@ class AppwriteTableDb {
         });
 
         if (playerAnywhere.total > 0) {
-            try {
-                const player = await this.appwriteDb.updateRow({
-                    databaseId: DATABASE_ID,
-                    tableId: PLAYERS_TABLE_ID,
-                    rowId: playerAnywhere.rows[0].$id,
-                    data: {
-                        lobbyId: lobby.$id,
-                        name,
-                        isReady: false,
-                        isHost: false,
-                        status: "thinking"
-                    }
-                });
-                return { lobby, player };
-            } catch (error: any) {
-                if (error.code === 409) {
-                    throw new Error("This name is already taken in the lobby. Please choose a different name.");
-                }
-                throw error;
-            }
+            // Delete the stale player row, then create a fresh one for this lobby.
+            // Using delete+create instead of updateRow because Appwrite TablesDB
+            // PATCH returns 409 "already exists" on rows with unique-indexed fields.
+            await this.appwriteDb.deleteRow({
+                databaseId: DATABASE_ID,
+                tableId: PLAYERS_TABLE_ID,
+                rowId: playerAnywhere.rows[0].$id,
+            });
+
+            const player = await this.appwriteDb.createRow({
+                databaseId: DATABASE_ID,
+                tableId: PLAYERS_TABLE_ID,
+                rowId: ID.unique(),
+                data: {
+                    lobbyId: lobby.$id,
+                    userId,
+                    name,
+                    isReady: false,
+                    isHost: false,
+                    status: "thinking",
+                },
+            });
+            return { lobby, player };
         }
 
         const rowId = ID.unique();
