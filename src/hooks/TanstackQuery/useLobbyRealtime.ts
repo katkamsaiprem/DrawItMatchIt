@@ -44,7 +44,7 @@ export const useLobbyRealtime = (lobbyId: string | null) => {
                 lobbyId,
                 () => {
                     queryClient.invalidateQueries({
-                        queryKey: ["lobby", lobbyId]
+                        queryKey: ["lobby-status", lobbyId]
                     })
 
                 }
@@ -76,6 +76,6 @@ export const useLobbyRealtime = (lobbyId: string | null) => {
             playerSub?.unsubscribe();
             lobbySub?.unsubscribe();
         }
-    }, [lobbyId, queryClient])
+    }, [lobbyId])
 
 }

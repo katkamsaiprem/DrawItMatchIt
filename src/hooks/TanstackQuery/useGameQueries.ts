@@ -1,6 +1,7 @@
 import { appwriteStorage } from "@/appwrite-services/AppwriteStorage"
 import { appwriteDb } from "@/appwrite-services/AppwriteTablesDB"
 import { scoreDrawing } from "@/appwrite-services/GeminiService"
+import { useAppStore } from "@/store/useAppStore"
 import type { LobbyPlayer } from "@/types/game"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
@@ -57,6 +58,11 @@ export const useCreateLobby = () => {
             localStorage.setItem("lobbyId", lobby.$id)
             localStorage.setItem("playerId", player.$id)
             localStorage.setItem("lobbyCode", lobby.roomId ?? "")
+            // also update the Zustand store so LobbyPage reads the values immediately
+            const { setLobbyId, setPlayerId, setLobbyCode } = useAppStore.getState();
+            setLobbyId(lobby.$id);
+            setPlayerId(player.$id);
+            setLobbyCode(lobby.roomId ?? "");
         }
     })
 }
@@ -80,6 +86,10 @@ export const useJoinLobby = () => {
             localStorage.setItem("lobbyId", lobby.$id);
             localStorage.setItem("playerId", player.$id);
             localStorage.setItem("lobbyCode", lobby.roomId ?? "");
+            const { setLobbyId, setPlayerId, setLobbyCode } = useAppStore.getState();
+            setLobbyId(lobby.$id);
+            setPlayerId(player.$id);
+            setLobbyCode(lobby.roomId ?? "");
         }
 
     })
@@ -163,6 +173,24 @@ export const usePlayAgain = () => {
     return useMutation({
         mutationFn: async ({ lobbyId, playerIds }: { lobbyId: string, playerIds: string[] }) => {
             return appwriteDb.resetGame(lobbyId, playerIds)
+        }
+    })
+}
+
+//Mutation: leave lobby — deletes the player row and clears local storage
+export const useLeaveLobby = () => {
+    return useMutation({
+        mutationFn: async ({ playerId }: { playerId: string; lobbyId: string }) => {
+            return appwriteDb.removePlayer(playerId);
+        },
+        onSuccess: () => {
+            localStorage.removeItem("lobbyId");
+            localStorage.removeItem("playerId");
+            localStorage.removeItem("lobbyCode");
+            const { setLobbyId, setPlayerId, setLobbyCode } = useAppStore.getState();
+            setLobbyId(null);
+            setPlayerId(null);
+            setLobbyCode(null);
         }
     })
 }

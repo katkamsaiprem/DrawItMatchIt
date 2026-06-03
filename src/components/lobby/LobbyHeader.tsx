@@ -1,15 +1,16 @@
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { useState } from "react"
-import { Link } from "react-router-dom"
+
 
 type LobbyHeaderProps = {
   lobbyCode: string
   isHost: boolean
+  onLeave?: () => void
 }
 
 
-const LobbyHeader = ({ lobbyCode, isHost }: LobbyHeaderProps) => {
+const LobbyHeader = ({ lobbyCode, isHost, onLeave }: LobbyHeaderProps) => {
   const [copied, setCopied] = useState(false)
 
   const handleCopy = async () => {
@@ -29,9 +30,8 @@ const LobbyHeader = ({ lobbyCode, isHost }: LobbyHeaderProps) => {
         <Button variant="secondary" type="button" onClick={handleCopy}>
           {copied ? 'Copied!' : 'Copy code'}
         </Button>
-        <Button variant="outline" type="button">
-          <Link to="/">Leave Lobby</Link>
-
+        <Button variant="outline" type="button" onClick={onLeave}>
+          Leave Lobby
         </Button>
         {isHost ? <p className="text-sm text-muted-foreground sm:ml-auto">You are the host.</p> : null}
       </CardContent>

@@ -4,46 +4,29 @@ import PlayerList from "@/components/lobby/PlayerList"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card"
 import NavBar from "@/components/ui/NavBar"
-import { useLobbyPlayers, useLobbyStatus, useStartGame, useToggleReady } from "@/hooks/TanstackQuery/useGameQueries"
+import { useLeaveLobby, useLobbyPlayers, useLobbyStatus, useStartGame, useToggleReady } from "@/hooks/TanstackQuery/useGameQueries"
+import { useLobbyRealtime } from "@/hooks/TanstackQuery/useLobbyRealtime"
+import { useAppStore } from "@/store/useAppStore"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 
-
-// export const PREVIEW_PLAYERS: LobbyPlayer[] = [
-//     { id: "p-1", name: "sai", isReady: true, isHost: true },
-//     { id: "p-2", name: "prem", isReady: true, isHost: false },
-//     { id: "p-3", name: "saiprem", isReady: false, isHost: false },
-// ]
-// export const PREVIEW_SELF_ID = "p-1"
-// const PREVIEW_CODE = "AB12CD"
 
 const LobbyPage = () => {
     //load real players from TablesDB ,toggle ready then start the game
 
     const navigate = useNavigate();
-
-    const [selfId, setSelfId] = useState<string | null>(null);
-    const [lobbyCode, setLobbyCode] = useState<string>("");
-
-
-    const lobbyId = localStorage.getItem("lobbyId");
-    const playerId = localStorage.getItem("playerId");
-
-    useEffect(() => {
-        if (playerId) setSelfId(playerId);
-        const storedCode = localStorage.getItem("lobbyCode");
-        if (storedCode) setLobbyCode(storedCode);
-
-    }, [playerId]) // loaded LobbyPlayers data
+    const { lobbyId, playerId, lobbyCode } = useAppStore();
 
     //TanstackQuery hooks
     const { data: players = [], isLoading } = useLobbyPlayers(lobbyId);
     const toggleReady = useToggleReady(lobbyId)
     const startGame = useStartGame()
+    const leaveLobby = useLeaveLobby()
     //---------------
 
-    useLobbyPlayers(lobbyId);
+    // Realtime subscription — invalidates player & lobby queries on changes
+    useLobbyRealtime(lobbyId)
 
     //host clicks "start game "all players should navigate to /gameplay
     const { data: lobbyStatus } = useLobbyStatus(lobbyId);
@@ -52,7 +35,7 @@ const LobbyPage = () => {
         if (lobbyStatus?.status === "in_progress" && lobbyId) {
             navigate("/gamePlay");
         }
-    }, [lobbyStatus?.status, navigate])
+    }, [lobbyStatus?.status, navigate, lobbyId])
 
     //------------
 
@@ -62,14 +45,19 @@ const LobbyPage = () => {
         navigate("/gamePlay");
     }
 
+    const handleLeaveLobby = async () => {
+        if (!playerId || !lobbyId) return;
+        await leaveLobby.mutateAsync({ playerId, lobbyId });
+        navigate("/");
+    }
 
-    const currentPlayer = players.find((player) => player.id === selfId)
+    const currentPlayer = players.find((player) => player.id === playerId)
     const readyCount = players.filter((player) => player.isReady).length
     const canStart = Boolean(currentPlayer?.isHost && readyCount >= 1)
 
     const handleToggleReady = async () => {
-        if (!selfId || !currentPlayer) return;
-        toggleReady.mutate({ playerId: selfId, isReady: !currentPlayer.isReady });
+        if (!playerId || !currentPlayer) return;
+        toggleReady.mutate({ playerId, isReady: !currentPlayer.isReady });
     };
 
 
@@ -78,14 +66,14 @@ const LobbyPage = () => {
             <NavBar subtitle="Invite players, get ready, then start." />
 
             <main className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 py-8">
-                <LobbyHeader lobbyCode={lobbyCode || "------"} isHost={Boolean(currentPlayer?.isHost)} />
+                <LobbyHeader lobbyCode={lobbyCode || "------"} isHost={Boolean(currentPlayer?.isHost)} onLeave={handleLeaveLobby} />
 
                 <div className="grid gap-4 md:grid-cols-5">
                     <div className="md:col-span-3">
                         {isLoading
-                            ? <p className="text - muted - foreground">Loading players</p>
+                            ? <p className="text-muted-foreground">Loading players</p>
 
-                            : <PlayerList players={players} selfPlayerId={selfId ?? ""} />
+                            : <PlayerList players={players} selfPlayerId={playerId ?? ""} />
                         }
                     </div>
 

@@ -24,7 +24,7 @@ class AppwriteTableDb {
         const lobby = await this.appwriteDb.createRow({
             databaseId: DATABASE_ID,
             tableId: LOBBIES_TABLE_ID,
-            rowId: ID.unique(),
+            rowId: crypto.randomUUID(),
             data: {
                 roomId,
                 hostId: hostUserId,
@@ -32,13 +32,11 @@ class AppwriteTableDb {
             },
         });
 
-        // Use upsertRow with userId as rowId — this creates the row if it
-        // doesn't exist, or replaces it if it does. Completely avoids 409
-        // conflicts from stale player rows or cross-session permission issues.
-        const player = await this.appwriteDb.upsertRow({
+       
+        const player = await this.appwriteDb.createRow({
             databaseId: DATABASE_ID,
             tableId: PLAYERS_TABLE_ID,
-            rowId: hostUserId,
+            rowId: crypto.randomUUID(),
             data: {
                 lobbyId: lobby.$id,
                 userId: hostUserId,
@@ -73,13 +71,10 @@ class AppwriteTableDb {
 
         const lobby = result.rows[0];
 
-        // Use upsertRow with userId as rowId — this creates the row if it
-        // doesn't exist, or replaces it if it does. Completely avoids 409
-        // conflicts from stale player rows or cross-session permission issues.
-        const player = await this.appwriteDb.upsertRow({
+        const player = await this.appwriteDb.createRow({
             databaseId: DATABASE_ID,
             tableId: PLAYERS_TABLE_ID,
-            rowId: userId,
+            rowId: crypto.randomUUID(),
             data: {
                 lobbyId: lobby.$id,
                 userId,
@@ -126,7 +121,7 @@ class AppwriteTableDb {
         const drawing = await this.appwriteDb.createRow({
             databaseId: DATABASE_ID,
             tableId: DRAWINGS_TABLE_ID,
-            rowId: ID.unique(),
+            rowId: crypto.randomUUID(),
             data: { lobbyId, playerId, fileId },
         });
 
@@ -177,6 +172,14 @@ class AppwriteTableDb {
         }
 
     }
+
+    public removePlayer = async (playerId: string) => {
+        return this.appwriteDb.deleteRow({
+            databaseId: DATABASE_ID,
+            tableId: PLAYERS_TABLE_ID,
+            rowId: playerId,
+        });
+    };
 }
 
 export const appwriteDb = new AppwriteTableDb();
