@@ -1,4 +1,4 @@
-import { ID, Query, TablesDB } from "appwrite";
+import { Query, TablesDB } from "appwrite";
 import appwriteClient from ".";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DB_ID;

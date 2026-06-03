@@ -1,4 +1,4 @@
-import { Storage, ID } from "appwrite";
+import { Storage } from "appwrite";
 import appwriteClient from ".";
 
 const REF_BUKET_ID = import.meta.env.VITE_REFERENCE_IMAGES_BUCKET_ID;
