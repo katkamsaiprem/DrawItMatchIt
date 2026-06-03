@@ -1,4 +1,4 @@
-import { Storage } from "appwrite";
+import { Storage, ID } from "appwrite";
 import appwriteClient from ".";
 
 const REF_BUKET_ID = import.meta.env.VITE_REFERENCE_IMAGES_BUCKET_ID;
@@ -27,7 +27,7 @@ class AppwriteStorage {
     public uploadDrawing = async (file: File) => {
         return await this.appwriteStorage.createFile(
             DRAWINGS_BUCKET_ID,
-            "unique()",
+            ID.unique(),
             file,
 
         )

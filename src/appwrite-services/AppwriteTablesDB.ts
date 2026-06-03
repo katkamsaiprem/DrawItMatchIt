@@ -1,4 +1,4 @@
-import { Query, TablesDB } from "appwrite";
+import { ID, Query, TablesDB } from "appwrite";
 import appwriteClient from ".";
 
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DB_ID;
@@ -24,7 +24,7 @@ class AppwriteTableDb {
         const lobby = await this.appwriteDb.createRow({
             databaseId: DATABASE_ID,
             tableId: LOBBIES_TABLE_ID,
-            rowId: "unique()",
+            rowId: ID.unique(),
             data: {
                 roomId,
                 hostId: hostUserId,
@@ -35,7 +35,7 @@ class AppwriteTableDb {
         const player = await this.appwriteDb.createRow({
             databaseId: DATABASE_ID,
             tableId: PLAYERS_TABLE_ID,
-            rowId: "unique()",
+            rowId: ID.unique(),
             data: {
                 lobbyId: lobby.$id,
                 userId: hostUserId,
@@ -84,22 +84,39 @@ class AppwriteTableDb {
             return { lobby, player: existingPlayer.rows[0] };
         }
 
-        const rowId = "unique()";
-        const player = await this.appwriteDb.createRow({
-            databaseId: DATABASE_ID,
-            tableId: PLAYERS_TABLE_ID,
-            rowId,
-            data: {
-                lobbyId: lobby.$id,
-                userId,
-                name,
-                isReady: false,
-                isHost: false,
-                status: "thinking",
-            },
-        });
-
-        return { lobby, player };
+        try {
+            const rowId = ID.unique();
+            const player = await this.appwriteDb.createRow({
+                databaseId: DATABASE_ID,
+                tableId: PLAYERS_TABLE_ID,
+                rowId,
+                data: {
+                    lobbyId: lobby.$id,
+                    userId,
+                    name,
+                    isReady: false,
+                    isHost: false,
+                    status: "thinking",
+                },
+            });
+            return { lobby, player };
+        } catch (error: any) {
+            if (error.code === 409) {
+                // If a race condition caused a double-insert, fetch the player again
+                const fallbackPlayer = await this.appwriteDb.listRows({
+                    databaseId: DATABASE_ID,
+                    tableId: PLAYERS_TABLE_ID,
+                    queries: [
+                        Query.equal("lobbyId", lobby.$id),
+                        Query.equal("userId", userId)
+                    ]
+                });
+                if (fallbackPlayer.total > 0) {
+                    return { lobby, player: fallbackPlayer.rows[0] };
+                }
+            }
+            throw error;
+        }
     };
 
     public toggleReady = async (playerId: string, isReady: boolean) => {
@@ -135,7 +152,7 @@ class AppwriteTableDb {
         const drawing = await this.appwriteDb.createRow({
             databaseId: DATABASE_ID,
             tableId: DRAWINGS_TABLE_ID,
-            rowId: "unique()",
+            rowId: ID.unique(),
             data: { lobbyId, playerId, fileId },
         });
 
