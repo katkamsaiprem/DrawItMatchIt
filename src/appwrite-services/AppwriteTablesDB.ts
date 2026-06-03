@@ -84,8 +84,8 @@ class AppwriteTableDb {
             return { lobby, player: existingPlayer.rows[0] };
         }
 
+        const rowId = ID.unique();
         try {
-            const rowId = ID.unique();
             const player = await this.appwriteDb.createRow({
                 databaseId: DATABASE_ID,
                 tableId: PLAYERS_TABLE_ID,
@@ -102,17 +102,28 @@ class AppwriteTableDb {
             return { lobby, player };
         } catch (error: any) {
             if (error.code === 409) {
-                // If a race condition caused a double-insert, fetch the player again
-                const fallbackPlayer = await this.appwriteDb.listRows({
-                    databaseId: DATABASE_ID,
-                    tableId: PLAYERS_TABLE_ID,
-                    queries: [
-                        Query.equal("lobbyId", lobby.$id),
-                        Query.equal("userId", userId)
-                    ]
-                });
-                if (fallbackPlayer.total > 0) {
-                    return { lobby, player: fallbackPlayer.rows[0] };
+                try {
+                  
+                    const fallbackPlayer = await this.appwriteDb.getRow({
+                        databaseId: DATABASE_ID,
+                        tableId: PLAYERS_TABLE_ID,
+                        rowId
+                    });
+                    return { lobby, player: fallbackPlayer };
+                } catch (e) {
+                   
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const fallbackPlayerList = await this.appwriteDb.listRows({
+                        databaseId: DATABASE_ID,
+                        tableId: PLAYERS_TABLE_ID,
+                        queries: [
+                            Query.equal("lobbyId", lobby.$id),
+                            Query.equal("userId", userId)
+                        ]
+                    });
+                    if (fallbackPlayerList.total > 0) {
+                        return { lobby, player: fallbackPlayerList.rows[0] };
+                    }
                 }
             }
             throw error;
