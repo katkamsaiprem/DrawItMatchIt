@@ -1,6 +1,6 @@
 import { appwriteStorage } from "@/appwrite-services/AppwriteStorage";
 import { PlayersResults, ResultsCritique, ResultsHeader, ResultsShowcase, ResultsStats } from "@/components/results"
-import { useAIcritique, useLobbyDrawings, useLobbyPlayers, useLobbyStatus, usePlayAgain } from "@/hooks/TanstackQuery/useGameQueries";
+import { useLobbyDrawings, useLobbyPlayers, useLobbyStatus, usePlayAgain, useSaveAIResult } from "@/hooks/TanstackQuery/useGameQueries";
 import { useLobbyRealtime } from "@/hooks/TanstackQuery/useLobbyRealtime";
 import { useAppStore } from "@/store/useAppStore";
 import type { PlayersData } from "@/types/playersResultsData"
@@ -20,6 +20,7 @@ const ResultsPage = () => {
   const { data: drawings = [] } = useLobbyDrawings(lobbyId);
 
   const playAgain = usePlayAgain();//returns mutate function
+  const saveAIResult = useSaveAIResult();
 
   //if host clicks play again then navigate everyone to lobby page
   useEffect(() => {
@@ -49,46 +50,89 @@ const ResultsPage = () => {
     ? appwriteStorage.getFilePreview(lobby.referenceImageId)
     : "/";
 
-  const firstDrawing = drawings.length > 0 ? drawings[0] : null;
-  const firstDrawingArtist = players.find(p => p.id === firstDrawing?.playerId)?.name || "Unknown";
+  //score each players drawing ,only call ai if not already saved in appwrite
+  useEffect(() => {
+    if (!referenceImageURL || referenceImageURL === "/") return;
 
-  const drawingURL = firstDrawing?.fileId
-    ? appwriteStorage.getDrawingPreview(firstDrawing.fileId)
-    : "/"
+    drawings.forEach((drawing: any) => {
+      //skip result saved in appwrite
+      if (drawing.similarityScore != null) return;
 
-  const { data: aiResult, isLoading: isScoring } = useAIcritique(referenceImageURL, drawingURL);
+      const drawingURL = drawing.fileId
+        ? appwriteStorage.getDrawingPreview(drawing.fileId)
+        : null;
 
-  const Results: PlayersData[] = players.map(player => ({
-    name: player.name,
-    accuracy: player.id === firstDrawing?.playerId ? (aiResult?.score || 0) : 0,
-    points: 0
-  }))
+      if (!drawingURL) return;
+
+      saveAIResult.mutate({
+        drawingId: drawing.$id,
+        referenceUrl: referenceImageURL,
+        drawingUrl: drawingURL
+      })
+    })
+  }, [drawings, referenceImageURL])
 
 
+  /**
+   * Build results for each player, matched with their drawing scores
+   * 
+   *  rank by accuracy descending
+   */
+  const Results: PlayersData[] = players.map(player => {
+    const playerDrawing = drawings.find((d: any) => d.playerId === player.id);
+    const score = playerDrawing?.similarityScore ?? 0;
+    return {
+      name: player.name,
+      accuracy: score,
+      points: score,
+    }
+  }).sort((a, b) => b.accuracy - a.accuracy)
 
+
+  // const firstDrawing = drawings.length > 0 ? drawings[0] : null;
+  // const firstDrawingArtist = players.find(p => p.id === firstDrawing?.playerId)?.name || "Unknown";
+
+  // const drawingURL = firstDrawing?.fileId
+  //   ? appwriteStorage.getDrawingPreview(firstDrawing.fileId)
+  //   : "/"
+
+  // const { data: aiResult, isLoading: isScoring } = useAIcritique(referenceImageURL, drawingURL);
+
+
+  /**
+   * For the showcase, show the CURRENT PLAYER's own drawing and critique
+   */
+  const myDrawing = drawings.find((d: any) => d.playerId === playerId);
+  const myName = players.find(p => p.id === playerId)?.name || "Unknown";
+  const myScore = myDrawing?.similarityScore ?? 0;
+  const myDrawingURL = myDrawing?.fileId
+    ? appwriteStorage.getDrawingPreview(myDrawing.fileId)
+    : "/";
+  const myCritique = myDrawing?.critique || "The AI judge is analyzing, please wait for few seconds..."
+  const isScoring = drawings.some((d: any) => d.similarityScore == null);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <ResultsHeader
+        isHost={!!isHost}
         onPlayAgain={isHost ? handlePlayAgain : undefined}
-        subtitle={isHost ? "Match concluede" : "Waiting for host to play again"} />
+        subtitle={isHost ? "Match concluded" : "Waiting for host to play again"} />
       < main className="mx-auto w-full max-w-5xl px-4 py-8">
         <div className="grid gap-4 lg:grid-cols-3">
           <ResultsShowcase
-            similarityScore={`${Results[0]?.accuracy || 0}%`}
+            similarityScore={`${myScore}%`}
             referenceLabel="Reference object"
             referenceURL={referenceImageURL}
-            artistName={firstDrawingArtist}
-            drawingURL={drawingURL}
+            artistName={myName}
+            drawingURL={myDrawingURL}
           />
           <ResultsCritique
-            text={isScoring ? "The AI judge is analyzing the brushstrokes..." : (aiResult?.critique || "waiting for critique...")}
+            text={isScoring ? "The AI judge is analyzing the brushstrokes..." : myCritique}
           />
         </div>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-3">
+        <div className="mt-6">
           <PlayersResults playersData={Results} />
-          <ResultsStats timeSpent="01:42" strokes={142} />
         </div>
       </main>
     </div>

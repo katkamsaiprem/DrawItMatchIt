@@ -56,10 +56,12 @@ TODO
  Add realtime subscriptions for lobby + players.✅  
  Implement game start + player status updates.  ✅
 
- Upload drawing PNG to storage + save drawings document.  
- Add Appwrite Function for AI analysis
- Store AI results in results and render Results page from DB.  
- Add loading/error states and cleanup for realtime subscriptions.
+ Upload drawing PNG to storage + save drawings document.  ✅
+ Add Appwrite Function for AI analysis✅
+ Store AI results in results and render Results page from DB.  ✅
+ Add loading/error states and cleanup for realtime subscriptions.✅
+
+ done✅
 
 
 

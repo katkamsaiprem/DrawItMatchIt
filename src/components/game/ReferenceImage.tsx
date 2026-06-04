@@ -6,13 +6,13 @@ const ReferenceImage = ({ imageId }: { imageId: string }) => {
     const imageUrl = appwriteStorage.getFilePreview(imageId);
 
     return (
-        <div className="absolute top-1/9 right-1/5 z-10">
+        <div className="absolute top-12 left-2 z-10">
 
             <div className="group relative cursor-crosshair">
                 <img
                     src={imageUrl}
                     alt="Target to draw"
-                    className="h-32 w-32 rounded-2xl border-4 border-indigo-200/50 object-cover shadow-xl backdrop-blur-sm transition-transform duration-300 origin-top-right group-hover:scale-[2.5] group-hover:shadow-2xl bg-white"
+                    className="h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28 rounded-2xl border-4 border-indigo-200/50 object-cover shadow-xl backdrop-blur-sm transition-transform duration-300 origin-top-left group-hover:scale-[2.5] group-hover:shadow-2xl bg-white"
                 />
 
 

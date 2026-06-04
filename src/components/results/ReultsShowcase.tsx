@@ -31,7 +31,7 @@ const ResultsShowcase = ({
                         <img
                             src={referenceURL}
                             alt="Reference"
-                            className="h-40 w-full object-cover"
+                            className="h-40 w-full object-contain"
                         />
                     </div>
                 </div>
@@ -43,7 +43,7 @@ const ResultsShowcase = ({
                         <img
                             src={drawingURL}
                             alt="Player drawing"
-                            className="h-40 w-full object-cover"
+                            className="h-40 w-full object-contain"
                         />
                     </div>
                 </div>

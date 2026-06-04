@@ -32,7 +32,7 @@ export const scoreDrawing = async (referenceUrl: string, drawingUrl: string) => 
 
     //I used gemini-3.5-flash model becase it is best for vision data
 
-    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
 
     const refPart = await urlToGenerativePart(referenceUrl);
     const drawPart = await urlToGenerativePart(drawingUrl);

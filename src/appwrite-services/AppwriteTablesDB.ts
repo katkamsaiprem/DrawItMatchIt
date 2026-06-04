@@ -32,7 +32,7 @@ class AppwriteTableDb {
             },
         });
 
-       
+
         const player = await this.appwriteDb.createRow({
             databaseId: DATABASE_ID,
             tableId: PLAYERS_TABLE_ID,
@@ -98,15 +98,27 @@ class AppwriteTableDb {
     };
 
     public startGame = async (lobbyId: string, referenceImageId: string) => {
-        return this.appwriteDb.updateRow({
+        await this.appwriteDb.updateRow({
             databaseId: DATABASE_ID,
             tableId: LOBBIES_TABLE_ID,
             rowId: lobbyId,
             data: {
                 status: "in_progress",
-                referenceImageId: referenceImageId
+                referenceImageId: referenceImageId,
+                startedAt: new Date().toISOString(),
             },
         });
+
+        // Set all players to "drawing" status
+        const players = await this.getLobbyPlayers(lobbyId);
+        for (const player of players.rows) {
+            await this.appwriteDb.updateRow({
+                databaseId: DATABASE_ID,
+                tableId: PLAYERS_TABLE_ID,
+                rowId: player.$id,
+                data: { status: "drawing" },
+            });
+        }
     };
 
     public getLobbyPlayers = async (lobbyId: string) => {
@@ -145,10 +157,11 @@ class AppwriteTableDb {
 
     //reset game for all players for another round
     /**
-     * Resets the lobby for all players for another around
+     * Resets the lobby for all players for another round
      * 
      * set lobby back to waiting
      * set each player back to thinking and not ready
+     * delete all drawings from the previous round
      * @param lobbyId Lobby ID
      * @param playerIds Array of player IDs
      */
@@ -168,7 +181,21 @@ class AppwriteTableDb {
                 rowId: playerIds[i],
                 data: { status: "thinking", isReady: false }
             })
+        }
 
+        // Delete all drawings from the previous round
+        const oldDrawings = await this.appwriteDb.listRows({
+            databaseId: DATABASE_ID,
+            tableId: DRAWINGS_TABLE_ID,
+            queries: [Query.equal("lobbyId", lobbyId)]
+        });
+
+        for (const drawing of oldDrawings.rows) {
+            await this.appwriteDb.deleteRow({
+                databaseId: DATABASE_ID,
+                tableId: DRAWINGS_TABLE_ID,
+                rowId: drawing.$id,
+            });
         }
 
     }
@@ -180,6 +207,18 @@ class AppwriteTableDb {
             rowId: playerId,
         });
     };
+
+    public saveAIResult = async (drawingId: string, score: number, critique: string) => {
+        return this.appwriteDb.updateRow({
+            databaseId: DATABASE_ID,
+            tableId: DRAWINGS_TABLE_ID,
+            rowId: drawingId,
+            data: {
+                similarityScore: score,
+                critique
+            }
+        })
+    }
 }
 
 export const appwriteDb = new AppwriteTableDb();

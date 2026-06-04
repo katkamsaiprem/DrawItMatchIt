@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/Button"
 type ResultsHeaderProps = {
   title?: string
   subtitle?: string
+  isHost?: boolean
   onPlayAgain?: () => void
 }
 
 const ResultsHeader = ({
   title = "Final Results",
   subtitle = "Match concluded",
+  isHost = false,
   onPlayAgain,
 }: ResultsHeaderProps) => {
   return (
@@ -18,7 +20,11 @@ const ResultsHeader = ({
         subtitle={subtitle}
         rightSlot={
           <div className="flex gap-2">
-            <Button onClick={onPlayAgain}>Play Again</Button>
+            {isHost ? (
+              <Button onClick={onPlayAgain}>Play Again</Button>
+            ) : (
+              <p className="text-sm text-muted-foreground">Waiting for host to start again...</p>
+            )}
           </div>
         }
       />

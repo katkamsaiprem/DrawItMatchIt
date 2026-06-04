@@ -1,6 +1,7 @@
 import { appwriteStorage } from "@/appwrite-services/AppwriteStorage"
 import { appwriteDb } from "@/appwrite-services/AppwriteTablesDB"
 import { scoreDrawing } from "@/appwrite-services/GeminiService"
+import { queryClient } from "@/main"
 import { useAppStore } from "@/store/useAppStore"
 import type { LobbyPlayer } from "@/types/game"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -28,13 +29,14 @@ export const useLobbyPlayers = (lobbyId: string | null) => {
 
 //Query fetch lobby status
 export const useLobbyStatus = (lobbyId: string | null) => {
-    return useQuery<{ status: string, referenceImageId?: string }>({
+    return useQuery<{ status: string, referenceImageId?: string, startedAt?: string }>({
         queryKey: ["lobby-status", lobbyId],
         queryFn: async () => {
             const result = await appwriteDb.getLobby(lobbyId!);
             return {
                 status: result.status,
-                referenceImageId: result.referenceImageId
+                referenceImageId: result.referenceImageId,
+                startedAt: result.startedAt,
             }
         },
         enabled: !!lobbyId,
@@ -195,15 +197,24 @@ export const useLeaveLobby = () => {
     })
 }
 
-export const useAIcritique = (referenceUrl: string, drawingUrl: string) => {
-    return useQuery({
+//Mutation : score drawing with ai and save result to appwrite
+export const useSaveAIResult = () => {
+    const queryClient = useQueryClient();
 
-        //we use both URLs as the query key so it uniquely caches the result
-        queryKey: ["ai-score", referenceUrl, drawingUrl],
-        queryFn: async () => {
-            return await scoreDrawing(referenceUrl, drawingUrl)
+    return useMutation({
+        mutationFn: async ({ drawingId, referenceUrl, drawingUrl }: {
+            drawingId: string;
+            referenceUrl: string;
+            drawingUrl: string;
+        }) => {
+            const aiResult = await scoreDrawing(referenceUrl, drawingUrl);
+            await appwriteDb.saveAIResult(drawingId, aiResult.score, aiResult.critique);
+            return aiResult;
         },
-        enabled: !!referenceUrl && !!drawingUrl && referenceUrl !== "/" && drawingUrl !== "/",//only run when we have both the URLs and is not default value
-        staleTime: Infinity,//never refetch unless the image changes
-    })
-}
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ["lobby-drawings"],
+            });
+        }
+    });
+};

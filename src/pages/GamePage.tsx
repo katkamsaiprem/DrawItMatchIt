@@ -1,6 +1,4 @@
-// import PlayerList from "@/components/lobby/PlayerList";
 import NavBar from "@/components/ui/NavBar";
-
 
 import CanvasComponent from "@/components/canvas/DrawingCanvas";
 import Countdown from "@/components/game/Countdown";
@@ -35,21 +33,24 @@ const GamePage = () => {
         }
     }, [players, navigate]);
     return (
-        <div>
+        <div className="flex flex-col h-screen">
             <NavBar
-                subtitle="Invite players, get ready, then start."
+                subtitle="Draw the target as closely as you can!"
 
-                rightSlot={<Countdown minutes={1} onTimeUp={() => setTimeUp(true)} />}
+                rightSlot={<Countdown minutes={1} startedAt={lobby?.startedAt} onTimeUp={() => setTimeUp(true)} />}
             />
-            <main className="flex gap-4">
+            <main className="flex flex-1 gap-4 p-4 overflow-hidden">
+                {/* Canvas area with reference image overlay */}
+                <div className="relative flex-1 min-w-0">
+                    {lobby?.referenceImageId && (
+                        <ReferenceImage imageId={lobby.referenceImageId} />
+                    )}
+                    <CanvasComponent isTimeUp={isTimeUp} />
+                </div>
 
-                <CanvasComponent isTimeUp={isTimeUp} />
-                {lobby?.referenceImageId && (
-                    <ReferenceImage imageId={lobby.referenceImageId} />
-                )}
-                <div className="m-3">
+                {/* Sidebar - hidden on mobile, shown on md+ */}
+                <div className="hidden md:block flex-shrink-0">
                     <RoomSidebar players={players} selfPlayerId={playerId ?? ""} />
-                    {/* <PlayerList players={PREVIEW_PLAYERS} selfPlayerId={PREVIEW_SELF_ID} /> */}
                 </div>
             </main>
         </div>

@@ -1,5 +1,5 @@
 //// navigate to gameOverPage when timer hits 0
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useTimer } from "react-timer-hook"
 import { Progress } from "@/components/ui/progress"
 // 1. Decide the input props
@@ -7,32 +7,49 @@ import { Progress } from "@/components/ui/progress"
 
 type CountdownProps = {
     minutes: number,
+    startedAt?: string,// iso timestamp from server
     onTimeUp?: () => void; //callback when time is up
     label?: string,
 }
 
-const Countdown = ({ minutes, onTimeUp, label = "Time left" }: CountdownProps) => {
+const Countdown = ({ minutes, startedAt, onTimeUp, label = "Time left" }: CountdownProps) => {
 
 
     //converts min to sec ,floor is to get whole number not decimal num, max is get max output 1 not 0 or negative
     const totalSeconds = Math.max(1, Math.floor(minutes * 60))
 
     const expiry = useMemo(() => {
-        const end = new Date()//create a date obj 
-        end.setSeconds(end.getSeconds() + totalSeconds)//add totalSec with curr seconds
+        if (startedAt) {
+            const startTime = new Date(startedAt)//calculate expiray from sever stored start time
+            startTime.setSeconds(startTime.getSeconds() + totalSeconds)//add totalSec with curr seconds
+            return startTime;
+        }
+
+        // if server hasnt given yet, start from now first render before server data arrives)
+        const end = new Date();
+        end.setSeconds(end.getSeconds() + totalSeconds);
         return end;
 
 
-    }, [totalSeconds])//useMemo() is performance optimization way that caches the results of expensive operations , renders only when dep value changes
+    }, [totalSeconds, startedAt])//useMemo() is performance optimization way that caches the results of expensive operations , renders only when dep value changes
 
 
-    const { minutes: mins, seconds, totalSeconds: remaining } = useTimer({//as timer decreases the total seconds decreases
+    const { minutes: mins, seconds, totalSeconds: remaining, restart } = useTimer({//as timer decreases the total seconds decreases
         expiryTimestamp: expiry,
         onExpire() {
             if (onTimeUp) onTimeUp();//tell the parent that time is up
         },
 
     })
+
+    //when startedAt arrivers ,after page refresh ,restart the timer
+    //with the correct expiry calculated from server timestamp
+    useEffect(() => {
+        if (startedAt) {
+            restart(expiry)
+        }
+
+    }, [startedAt])
 
     const countdown = `${mins}:${seconds.toString().padStart(2, "0")}`//convert 2:5 into 2:05 ,so seconds.toString().padStart(2,"0") make 05,04
 
