@@ -1,7 +1,6 @@
 import { appwriteStorage } from "@/appwrite-services/AppwriteStorage"
 import { appwriteDb } from "@/appwrite-services/AppwriteTablesDB"
 import { scoreDrawing } from "@/appwrite-services/GeminiService"
-import { queryClient } from "@/main"
 import { useAppStore } from "@/store/useAppStore"
 import type { LobbyPlayer } from "@/types/game"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"

@@ -1,5 +1,5 @@
 import { appwriteStorage } from "@/appwrite-services/AppwriteStorage";
-import { PlayersResults, ResultsCritique, ResultsHeader, ResultsShowcase, ResultsStats } from "@/components/results"
+import { PlayersResults, ResultsCritique, ResultsHeader, ResultsShowcase } from "@/components/results"
 import { useLobbyDrawings, useLobbyPlayers, useLobbyStatus, usePlayAgain, useSaveAIResult } from "@/hooks/TanstackQuery/useGameQueries";
 import { useLobbyRealtime } from "@/hooks/TanstackQuery/useLobbyRealtime";
 import { useAppStore } from "@/store/useAppStore";
