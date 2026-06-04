@@ -28,10 +28,10 @@ const HomePage = () => {
                         <CardTitle>How it works</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm text-muted-foreground">
-                        <p>1. The host creates a game room and shares the invite link with friends. </p>
-                        <p>2. After everyone joins, the host starts the game..</p>
-                        <p>3. The AI gives each round a word prompt (for example, “cat”), and players draw that word.</p>
-                        <p>4. Players are judged on drawing quality, and the best drawing wins the round/game.</p>
+                        <p>1. The host creates a game room and shares the room code with friends, or players join an existing room.</p>
+                        <p>2. Once players join the lobby and mark themselves as ready, the host starts the game.</p>
+                        <p>3. A reference image overlay is displayed, and players draw and trace it as accurately as possible before the timer runs out.</p>
+                        <p>4. The AI judge analyzes and compares each drawing to the reference, generating similarity scores and critiques to rank the players.</p>
                     </CardContent>
                 </Card>
             </main>
