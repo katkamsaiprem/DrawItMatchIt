@@ -1,163 +1,121 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react"
 import { create } from "simple-drawing-board"
-import Toolbar from "@/components/canvas/Toolbar"
 import { useAppStore } from "@/store/useAppStore";
 import { useSubmitDrawings } from "@/hooks/TanstackQuery/useGameQueries";
 
-
 type CanvasProps = {
-  isTimeUp?: boolean;//this prop while tell is time is up or not 
+  isTimeUp?: boolean;
+  lineSize: number;
+  lineColor: string;
 }
 
-const CanvasComponent = ({ isTimeUp }: CanvasProps) => {
 
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)//useRef is used to store values like dom elements which are no need to render , 
-  const boardRef = useRef<ReturnType<typeof create> | null>(null);//stores the drawing board instance ,created by create() to get access to functions
+export type CanvasHandle = {
+  toggleMode: () => void;
+  undo: () => void;
+  clear: () => void;
+  download: () => void;
+  getMode: () => "draw" | "erase";
+}
 
-  const [lineSize, setLineSize] = useState(5)
-  const [lineColor, setLineColor] = useState("#000000")
-  const [mode, setMode] = useState<"draw" | "erase">("draw")
+// forwardRef lets GamePage pass a ref={canvasRef} to this component
+const CanvasComponent = forwardRef<CanvasHandle, CanvasProps>(
+  ({ isTimeUp, lineSize, lineColor }, ref) => {
 
-  const { lobbyId, playerId } = useAppStore();
-  const submitDrawing = useSubmitDrawings();
+    const containerRef = useRef<HTMLDivElement | null>(null)
+    const canvasRef = useRef<HTMLCanvasElement | null>(null)
+    const boardRef = useRef<ReturnType<typeof create> | null>(null);
 
+    const { lobbyId, playerId } = useAppStore();
+    const submitDrawing = useSubmitDrawings();
 
-  const applyStrokeStyle = (canvas: HTMLCanvasElement) => {
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-    ctx.lineCap = "round"
-    ctx.lineJoin = "round"
-
-  }
-  useEffect(() => {
-    if (!canvasRef.current) return;//if canvas is not ready then return
-    //now intialize the board on canvas
-    boardRef.current = create(canvasRef.current);
-    boardRef.current.setLineColor("#000");
-    boardRef.current.setLineSize(5);//5 pixels
-    applyStrokeStyle(canvasRef.current)
-    //now we need to write cleanUP function to remove not req memory(memory leaks) , it runs when comp ,unmounts
-    return () => boardRef.current?.destroy();
-  }, []);
-
-  //Whenever lineColor and lineSize changes ,then update board
-  useEffect(() => {
-    if (!boardRef.current) return;
-    boardRef.current.setLineColor(lineColor);
-  }, [lineColor]);
-
-  useEffect(() => {
-    if (!boardRef.current) return;
-    boardRef.current.setLineSize(lineSize);
-  }, [lineSize]);
-
-
-  //Resize without losing the drawing
-  /*
-    first take snapshot of drawing before resizing the canvas
-    Resize the canvas to match the container
-    Restore the drawing afterward
-   */
-  useEffect(() => {
-    const container = containerRef.current;
-    const canvas = canvasRef.current;
-    const board = boardRef.current;
-    if (!container || !canvas || !board) return;
-
-    const resizeToContainer = async () => {
-      const dataUrl = board.toDataURL(); // toDataURL converts drawing's data into URL form
-      canvas.width = container.clientWidth;//Resize the canvas to match the container
-      canvas.height = container.clientHeight;
-      applyStrokeStyle(canvas)
-      await board.fillImageByDataURL(dataUrl);//Restore the drawing afterward
-    };
-
-    const observer = new ResizeObserver(() => {//Observer runs whenever the container size changes
-      void resizeToContainer();
-    });
-
-    observer.observe(container);//start observing + initialResize , resizeToContainer() is called once so the canvas matches the container on first render
-    void resizeToContainer();
-
-    return () => observer.disconnect();
-  }, []);
-
-
-
-  //Toolbar actions 
-
-
-  const handleToggleMode = () => { //logic to change draw to eraser or eraser to draw
-    if (!boardRef.current) return;
-    boardRef.current.toggleMode();
-    setMode(boardRef.current.mode);//updates the mode
-  };
-
-  const handleUndo = async () => {
-    await boardRef.current?.undo()
-  };
-
-
-  const handleClear = () => {
-    boardRef.current?.clear()
-  };
-
-  const handleDownload = () => {
-    const dataUrl = boardRef.current?.toDataURL();//
-    if (!dataUrl) return;
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = "drawing.png";
-    a.click();
-  };
-
-  useEffect(() => {
-    if (isTimeUp) {
-      handleSubmit()
+    const applyStrokeStyle = (canvas: HTMLCanvasElement) => {
+      const ctx = canvas.getContext("2d")
+      if (!ctx) return
+      ctx.lineCap = "round"
+      ctx.lineJoin = "round"
     }
-  }, [isTimeUp])
 
+    // initialize the board once
+    useEffect(() => {
+      if (!canvasRef.current) return;
+      boardRef.current = create(canvasRef.current);
+      boardRef.current.setLineColor("#000");
+      boardRef.current.setLineSize(5);
+      applyStrokeStyle(canvasRef.current)
+      return () => boardRef.current?.destroy();
+    }, []);
 
-  const handleSubmit = async () => {
-    if (!boardRef.current || !lobbyId || !playerId) return;
+    // Sync color whenever GamePage changes it
+    useEffect(() => {
+      if (!boardRef.current) return;
+      boardRef.current.setLineColor(lineColor);
+    }, [lineColor]);
 
+    // Sync size whenever GamePage changes it
+    useEffect(() => {
+      if (!boardRef.current) return;
+      boardRef.current.setLineSize(lineSize);
+    }, [lineSize]);
 
-    const dataUrl = boardRef.current.toDataURL();
+    // Resize canvas without losing the drawing
+    useEffect(() => {
+      const container = containerRef.current;
+      const canvas = canvasRef.current;
+      const board = boardRef.current;
+      if (!container || !canvas || !board) return;
 
-    const response = await fetch(dataUrl);
-    const blob = await response.blob();
-    const file = new File([blob], "drawing.png", { type: "image/png" });
+      const resizeToContainer = async () => {
+        const dataUrl = board.toDataURL();
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        applyStrokeStyle(canvas)
+        await board.fillImageByDataURL(dataUrl);
+      };
 
-    await submitDrawing.mutateAsync({
-      lobbyId,
-      playerId,
-      file,
-    })
+      const observer = new ResizeObserver(() => { void resizeToContainer(); });
+      observer.observe(container);
+      void resizeToContainer();
 
-  }
+      return () => observer.disconnect();
+    }, []);
 
+    const handleSubmit = async () => {
+      if (!boardRef.current || !lobbyId || !playerId) return;
+      const dataUrl = boardRef.current.toDataURL();
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      const file = new File([blob], "drawing.png", { type: "image/png" });
+      await submitDrawing.mutateAsync({ lobbyId, playerId, file });
+    }
 
-  return (
-    <div className="flex flex-col gap-3 w-full">
-      <Toolbar
-        lineSize={lineSize}
-        lineColor={lineColor}
-        mode={mode}
-        onLineSizeChange={setLineSize}
-        onLineColorChange={setLineColor}
-        onToggleMode={handleToggleMode}
-        onUndo={handleUndo}
+    useEffect(() => {
+      if (isTimeUp) { handleSubmit() }
+    }, [isTimeUp])
 
-        onClear={handleClear}
-        onDownload={handleDownload}
+    // Expose these methods so GamePage can call them from canvasRef.current.toggleMode().
+    useImperativeHandle(ref, () => ({
+      toggleMode: () => { boardRef.current?.toggleMode(); },
+      undo: async () => { await boardRef.current?.undo(); },
+      clear: () => { boardRef.current?.clear(); },
+      download: () => {
+        const dataUrl = boardRef.current?.toDataURL();
+        if (!dataUrl) return;
+        const a = document.createElement("a");
+        a.href = dataUrl;
+        a.download = "drawing.png";
+        a.click();
+      },
+      getMode: () => boardRef.current?.mode ?? "draw",
+    }));
 
-      />
+    return (
       <div ref={containerRef} className="w-full h-[70vh] border">
         <canvas ref={canvasRef} className="block w-full h-full" />
       </div>
-    </div>
-  );
-};
+    );
+  }
+);
 
+CanvasComponent.displayName = "CanvasComponent";
 export default CanvasComponent;

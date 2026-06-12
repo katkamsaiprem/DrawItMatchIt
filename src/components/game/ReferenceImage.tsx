@@ -16,7 +16,7 @@ const ReferenceImage = ({ imageId }: { imageId: string }) => {
                 />
 
 
-                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-max rounded-full bg-indigo-500 px-3 py-1 text-[10px] font-bold tracking-widest text-white shadow-md transition-opacity duration-300 group-hover:opacity-0">
+                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-max rounded-full bg-cyan-500 px-3 py-1 text-[10px] font-bold tracking-widest text-white shadow-md transition-opacity duration-300 group-hover:opacity-0">
                     TARGET
                 </div>
             </div>

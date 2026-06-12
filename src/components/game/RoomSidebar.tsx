@@ -7,7 +7,7 @@ type RoomSidebarProps = {
 }
 
 const statusMeta: Record<NonNullable<LobbyPlayer["status"]>, { label: string; tone: string; icon: string }> = {
-    drawing: { label: "Drawing...", tone: "text-primary", icon: "edit" },
+    drawing: { label: "Drawing...", tone: "text-foreground", icon: "edit" },
     finished: { label: "Finished", tone: "text-emerald-600", icon: "check" },
     thinking: { label: "Thinking...", tone: "text-muted-foreground", icon: "psychology" },
 }

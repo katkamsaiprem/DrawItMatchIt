@@ -65,6 +65,11 @@ TODO
 
 
 
+TODO
 
+Change Theme✅
+Conver all buttons into 3d✅
+Change ToolBar ui✅
+Hightlight accuracy Rating
 
 
