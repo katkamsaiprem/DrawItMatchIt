@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react"
+import { useEffect, useRef, forwardRef, useImperativeHandle } from "react"
 import { create } from "simple-drawing-board"
 import { useAppStore } from "@/store/useAppStore";
 import { useSubmitDrawings } from "@/hooks/TanstackQuery/useGameQueries";
@@ -36,7 +36,7 @@ const CanvasComponent = forwardRef<CanvasHandle, CanvasProps>(
       ctx.lineJoin = "round"
     }
 
-    // initialize the board once
+
     useEffect(() => {
       if (!canvasRef.current) return;
       boardRef.current = create(canvasRef.current);
@@ -46,19 +46,19 @@ const CanvasComponent = forwardRef<CanvasHandle, CanvasProps>(
       return () => boardRef.current?.destroy();
     }, []);
 
-    // Sync color whenever GamePage changes it
+
     useEffect(() => {
       if (!boardRef.current) return;
       boardRef.current.setLineColor(lineColor);
     }, [lineColor]);
 
-    // Sync size whenever GamePage changes it
+
     useEffect(() => {
       if (!boardRef.current) return;
       boardRef.current.setLineSize(lineSize);
     }, [lineSize]);
 
-    // Resize canvas without losing the drawing
+
     useEffect(() => {
       const container = containerRef.current;
       const canvas = canvasRef.current;
