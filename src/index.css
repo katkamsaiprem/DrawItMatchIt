@@ -1,14 +1,14 @@
+@import "@fontsource/schoolbell";
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/noto-sans";
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: 'Caveat', cursive;
-  --font-sans: 'Caveat', cursive;
+  --font-heading: 'Schoolbell', cursive;
+  --font-sans: 'Schoolbell', cursive;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -115,11 +115,8 @@
     @apply border-border outline-ring/50;
   }
 
+  html,
   body {
-    @apply bg-background text-foreground;
-  }
-
-  html {
-    @apply font-sans;
+    @apply bg-background text-foreground font-sans;
   }
 }

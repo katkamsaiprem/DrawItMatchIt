@@ -10,8 +10,14 @@ import { useCreateLobby, useJoinLobby } from "@/hooks/TanstackQuery/useGameQueri
 
 const getMode = (params: URLSearchParams): LobbyMode => (params.get("mode") === "join" ? "join" : "create")
 
+
+/**
+ * NameFlowForm component is a form used to enter the player's name and the lobby code.
+ * 
+ * @returns  
+ */
 function NameFlowForm() {
-  const [params] = useSearchParams()
+  const [params] = useSearchParams() //to read the query params from the url : ?mode=create or ?mode=join
   const navigate = useNavigate();
 
 
@@ -29,8 +35,8 @@ function NameFlowForm() {
   const joinLobby = useJoinLobby();
 
   const handleCreate = async () => {
-    if (createLobby.isPending) return;
-    if (!playerName.trim() || !userId) return;
+    if (createLobby.isPending) return; // Prevent double submission
+    if (!playerName.trim() || !userId) return; // Prevent empty name or no userId
     setErrorMessage("");
     try {
       await createLobby.mutateAsync({ userId, playerName })

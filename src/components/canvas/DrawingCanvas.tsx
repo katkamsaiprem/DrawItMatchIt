@@ -18,6 +18,7 @@ export type CanvasHandle = {
   getMode: () => "draw" | "erase";
 }
 
+//forwardRef means we can pass ref to this component from parent
 // forwardRef lets GamePage pass a ref={canvasRef} to this component
 const CanvasComponent = forwardRef<CanvasHandle, CanvasProps>(
   ({ isTimeUp, lineSize, lineColor }, ref) => {
@@ -47,6 +48,7 @@ const CanvasComponent = forwardRef<CanvasHandle, CanvasProps>(
     }, []);
 
 
+    // Sync colors whenever GamePage changes it
     useEffect(() => {
       if (!boardRef.current) return;
       boardRef.current.setLineColor(lineColor);
@@ -80,6 +82,14 @@ const CanvasComponent = forwardRef<CanvasHandle, CanvasProps>(
       return () => observer.disconnect();
     }, []);
 
+    /**
+     * it handles the submission of canvas data 
+     * converting drawing into png blob(binary large object)
+     * calling store mutation
+     * It runs automatically when isTimeUp is true
+     * 
+     * @returns {Promise<void>}
+     */
     const handleSubmit = async () => {
       if (!boardRef.current || !lobbyId || !playerId) return;
       const dataUrl = boardRef.current.toDataURL();
@@ -93,6 +103,7 @@ const CanvasComponent = forwardRef<CanvasHandle, CanvasProps>(
       if (isTimeUp) { handleSubmit() }
     }, [isTimeUp])
 
+    //useImperativeHandle means parent can access these methods
     // Expose these methods so GamePage can call them from canvasRef.current.toggleMode().
     useImperativeHandle(ref, () => ({
       toggleMode: () => { boardRef.current?.toggleMode(); },
